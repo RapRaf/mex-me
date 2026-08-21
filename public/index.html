@@ -4,60 +4,349 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Textarea Realtime Sincronizzata</title>
+    <title>Workspace Condiviso</title>
     <style>
-        /* Resetta i margini e fai occupare alla textarea tutto lo schermo */
         body,
         html {
             margin: 0;
             padding: 0;
-            height: 100%;
-            overflow: hidden;
+            height: 100vh;
             font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background-color: #eef2f5;
+        }
+
+        .text-section {
+            flex: 2;
+            display: flex;
         }
 
         textarea {
             width: 100%;
             height: 100%;
-            box-sizing: border-box;
             padding: 20px;
             font-size: 18px;
             border: none;
             outline: none;
             resize: none;
-            background-color: #fff;
-            line-height: 1.5;
+            box-sizing: border-box;
+        }
+
+        .toolbar {
+            background: #2c3e50;
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .files-section {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-content: flex-start;
+        }
+
+        /* CARD STANDARD */
+        .file-card {
+            background: white;
+            border-radius: 8px;
+            width: 110px;
+            height: 120px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            text-decoration: none;
+            color: #333;
+            transition: transform 0.2s;
+        }
+
+        .file-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .file-card .icon {
+            font-size: 40px;
+            margin-bottom: 5px;
+        }
+
+        .file-card .name {
+            font-size: 11px;
+            word-break: break-all;
+            padding: 0 5px;
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+            border: 2px solid white;
+            z-index: 10;
+        }
+
+        .delete-btn:hover {
+            background: #c0392b;
+        }
+
+        /* CARD FANTASMA (IN CARICAMENTO) */
+        .file-card.uploading {
+            background: #bdc3c7;
+            pointer-events: none;
+            /* Non cliccabile */
+        }
+
+        .file-card.uploading .icon,
+        .file-card.uploading .name {
+            opacity: 0.3;
+        }
+
+        /* Oscurato */
+
+        /* Overlay con freccia animata e statistiche */
+        .upload-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #2c3e50;
+            font-weight: bold;
+            border-radius: 8px;
+        }
+
+        .animated-arrow {
+            font-size: 28px;
+            animation: uploadBounce 1s infinite ease-in-out;
+        }
+
+        @keyframes uploadBounce {
+
+            0%,
+            100% {
+                transform: translateY(5px);
+            }
+
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+        .stats {
+            font-size: 11px;
+            margin-top: 10px;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 2px 6px;
+            border-radius: 4px;
         }
     </style>
 </head>
 
 <body>
 
-    <textarea id="shared-textarea" placeholder="Inizia a scrivere qui... il testo sarà condiviso con tutti!"></textarea>
+    <div class="text-section">
+        <textarea id="shared-textarea" placeholder="Scrivi qui..."></textarea>
+    </div>
+
+    <div class="toolbar">
+        <input type="file" id="file-input">
+        <span id="upload-status" style="font-size: 14px; color: #f1c40f;"></span>
+    </div>
+
+    <div class="files-section" id="files-container"></div>
+
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
         const textarea = document.getElementById('shared-textarea');
+        const fileInput = document.getElementById('file-input');
+        const filesContainer = document.getElementById('files-container');
 
-        // 1. Ricezione del testo iniziale quando ci colleghiamo per la prima volta
-        socket.on('init_text', (text) => {
-            textarea.value = text;
+        // Helper per formattare i Byte in KB o MB
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024, sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+
+        // Helper per scegliere l'emoji
+        function getIcon(filename) {
+            if (filename.match(/\.(jpg|jpeg|png|gif)$/i)) return '🖼️';
+            if (filename.match(/\.(mp4|mov|avi)$/i)) return '🎥';
+            if (filename.match(/\.(zip|rar)$/i)) return '🗜️';
+            return '📄';
+        }
+
+        // --- GESTIONE TESTO ---
+        socket.on('init_text', (text) => textarea.value = text);
+        socket.on('text_update', (text) => textarea.value = text);
+        textarea.addEventListener('input', (e) => socket.emit('text_change', e.target.value));
+
+        // --- GESTIONE FILE: AVVIO E RICEZIONE ---
+        socket.on('init_files', (files) => {
+            filesContainer.innerHTML = '';
+            files.forEach(renderFileCard);
         });
 
-        // 2. Ricezione degli aggiornamenti in tempo reale dagli altri utenti
-        socket.on('text_update', (text) => {
-            // Aggiorniamo il valore della textarea senza sovrascrivere se non necessario
-            // (in applicazioni più complesse servirebbe gestire i conflitti dei cursori, 
-            // ma per una semplice sostituzione totale questo basta)
-            textarea.value = text;
+        // Quando parte un caricamento (nostro o altrui)
+        function createGhostCard(data) {
+            const card = document.createElement('div');
+            card.className = 'file-card uploading';
+            card.id = `ghost-${data.tempId}`;
+
+            card.innerHTML = `
+                <div class="icon">${getIcon(data.name)}</div>
+                <div class="name">${data.name}</div>
+                <div class="upload-overlay">
+                    <div class="animated-arrow">⬆️</div>
+                    <div class="stats">
+                        <div class="total-size">${formatBytes(data.size)}</div>
+                        <div class="speed" id="speed-${data.tempId}">Calcolo...</div>
+                    </div>
+                </div>
+            `;
+            filesContainer.prepend(card); // Mettiamolo all'inizio!
+        }
+
+        socket.on('upload_started', createGhostCard);
+
+        socket.on('upload_progress', (data) => {
+            const speedElement = document.getElementById(`speed-${data.tempId}`);
+            if (speedElement) speedElement.textContent = data.speed;
         });
 
-        // 3. Invio degli aggiornamenti al server ad ogni modifica
-        textarea.addEventListener('input', (event) => {
-            const newValue = event.target.value;
-            socket.emit('text_change', newValue);
+        // Quando il file è definitivo
+        socket.on('new_file', (fileInfo) => {
+            // Rimuovi la carta fantasma
+            const ghost = document.getElementById(`ghost-${fileInfo.tempId}`);
+            if (ghost) ghost.remove();
+
+            // Crea la carta vera cliccabile
+            renderFileCard(fileInfo);
         });
+
+        socket.on('file_deleted', (fileId) => {
+            const card = document.getElementById(`file-${fileId}`);
+            if (card) card.remove();
+        });
+
+
+        // --- LOGICA DI UPLOAD CON CALCOLO VELOCITÀ ---
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Generiamo un ID temporaneo univoco per questo caricamento
+            const tempId = 'temp_' + Date.now();
+
+            const startData = { tempId, name: file.name, size: file.size };
+
+            // Creiamo subito l'icona fantasma per NOI stessi
+            createGhostCard(startData);
+
+            // Avvisiamo gli ALTRI di creare la loro icona fantasma
+            socket.emit('upload_started', startData);
+
+            // Importante: appendiamo tempId PRIMA del file, così Multer lo legge prima
+            const formData = new FormData();
+            formData.append('tempId', tempId);
+            formData.append('file', file);
+
+            const xhr = new XMLHttpRequest();
+
+            // Variabili per calcolare la velocità
+            let lastLoadedBytes = 0;
+            let lastTime = Date.now();
+
+            xhr.upload.onprogress = (event) => {
+                if (event.lengthComputable) {
+                    const now = Date.now();
+                    const timeDiff = (now - lastTime) / 1000; // in secondi
+
+                    // Aggiorniamo la velocità ogni 500ms per non far impazzire i numeri
+                    if (timeDiff > 0.5) {
+                        const bytesDiff = event.loaded - lastLoadedBytes;
+                        const speedBps = bytesDiff / timeDiff; // Byte al secondo
+                        const speedText = formatBytes(speedBps) + '/s';
+
+                        // Aggiorniamo la NOSTRA icona fantasma
+                        const speedElement = document.getElementById(`speed-${tempId}`);
+                        if (speedElement) speedElement.textContent = speedText;
+
+                        // Avvisiamo gli ALTRI della nostra velocità
+                        socket.emit('upload_progress', { tempId, speed: speedText });
+
+                        lastLoadedBytes = event.loaded;
+                        lastTime = now;
+                    }
+                }
+            };
+
+            xhr.onload = () => {
+                fileInput.value = '';
+            };
+
+            xhr.open('POST', '/upload', true);
+            xhr.send(formData);
+        });
+
+
+        // --- FUNZIONI UI STANDARD ---
+        function renderFileCard(fileInfo) {
+            const card = document.createElement('div');
+            card.className = 'file-card';
+            card.id = `file-${fileInfo.id}`;
+
+            const link = document.createElement('a');
+            link.href = fileInfo.url;
+            // link.target = "_blank";
+            link.download = fileInfo.name
+            link.style.textDecoration = 'none'; link.style.color = 'inherit';
+            link.innerHTML = `
+                <div class="icon">${getIcon(fileInfo.name)}</div>
+                <div class="name">${fileInfo.name}</div>
+            `;
+
+            const deleteBtn = document.createElement('div');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.innerHTML = '×';
+            deleteBtn.onclick = (e) => {
+                e.preventDefault();
+                if (confirm(`Vuoi eliminare ${fileInfo.name}?`)) {
+                    socket.emit('delete_file', fileInfo.id);
+                }
+            };
+
+            card.appendChild(link);
+            card.appendChild(deleteBtn);
+            // prepend per inserirlo all'inizio della lista
+            filesContainer.prepend(card);
+        }
     </script>
 </body>
 

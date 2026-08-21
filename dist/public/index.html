@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Textarea Realtime Sincronizzata</title>
+    <style>
+        /* Resetta i margini e fai occupare alla textarea tutto lo schermo */
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+            padding: 20px;
+            font-size: 18px;
+            border: none;
+            outline: none;
+            resize: none;
+            background-color: #fff;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+
+<body>
+
+    <textarea id="shared-textarea" placeholder="Inizia a scrivere qui... il testo sarà condiviso con tutti!"></textarea>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const textarea = document.getElementById('shared-textarea');
+
+        // 1. Ricezione del testo iniziale quando ci colleghiamo per la prima volta
+        socket.on('init_text', (text) => {
+            textarea.value = text;
+        });
+
+        // 2. Ricezione degli aggiornamenti in tempo reale dagli altri utenti
+        socket.on('text_update', (text) => {
+            // Aggiorniamo il valore della textarea senza sovrascrivere se non necessario
+            // (in applicazioni più complesse servirebbe gestire i conflitti dei cursori, 
+            // ma per una semplice sostituzione totale questo basta)
+            textarea.value = text;
+        });
+
+        // 3. Invio degli aggiornamenti al server ad ogni modifica
+        textarea.addEventListener('input', (event) => {
+            const newValue = event.target.value;
+            socket.emit('text_change', newValue);
+        });
+    </script>
+</body>
+
+</html>
