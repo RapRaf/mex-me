@@ -1,171 +1,76 @@
 <!DOCTYPE html>
 <html lang="it">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Workspace Condiviso</title>
+    <title>MexMe - Clipboard</title>
     <style>
-        body,
-        html {
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            background-color: #eef2f5;
+        body, html {
+            margin: 0; padding: 0; height: 100vh;
+            font-family: Arial, sans-serif; display: flex; flex-direction: column;
+            overflow: hidden; background-color: #eef2f5;
         }
 
-        .text-section {
-            flex: 2;
-            display: flex;
-        }
+        .text-section { flex: 2; display: flex; }
+        textarea { width: 100%; height: 100%; padding: 20px; font-size: 18px; border: none; outline: none; resize: none; box-sizing: border-box; }
 
-        textarea {
-            width: 100%;
-            height: 100%;
-            padding: 20px;
-            font-size: 18px;
-            border: none;
-            outline: none;
-            resize: none;
-            box-sizing: border-box;
-        }
-
-        .toolbar {
-            background: #2c3e50;
-            color: white;
-            padding: 10px 20px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
+        .toolbar { background: #2c3e50; color: white; padding: 10px 20px; display: flex; align-items: center; gap: 15px; }
 
         .files-section {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            align-content: flex-start;
+            flex: 1; padding: 20px; overflow-y: auto;
+            display: flex; flex-wrap: wrap; gap: 20px; align-content: flex-start;
         }
 
-        /* CARD STANDARD */
+        /* CARD STANDARD - Leggermente ingrandita per contenere le statistiche */
         .file-card {
-            background: white;
-            border-radius: 8px;
-            width: 110px;
-            height: 120px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            text-decoration: none;
-            color: #333;
-            transition: transform 0.2s;
+            background: white; border-radius: 8px; width: 130px; height: 140px; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center; text-decoration: none; color: #333; transition: transform 0.2s;
         }
-
-        .file-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .file-card .icon {
-            font-size: 40px;
-            margin-bottom: 5px;
-        }
-
-        .file-card .name {
-            font-size: 11px;
-            word-break: break-all;
-            padding: 0 5px;
-        }
-
+        .file-card:hover { transform: translateY(-5px); }
+        .file-card .icon { font-size: 40px; margin-bottom: 5px; }
+        .file-card .name { font-size: 11px; word-break: break-all; padding: 0 5px; }
+        
         .delete-btn {
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            background: #e74c3c;
-            color: white;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 14px;
-            border: 2px solid white;
-            z-index: 10;
+            position: absolute; top: -8px; right: -8px; background: #e74c3c; color: white; border-radius: 50%;
+            width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
+            font-weight: bold; cursor: pointer; font-size: 14px; border: 2px solid white; z-index: 10;
         }
-
-        .delete-btn:hover {
-            background: #c0392b;
-        }
+        .delete-btn:hover { background: #c0392b; }
 
         /* CARD FANTASMA (IN CARICAMENTO) */
         .file-card.uploading {
-            background: #bdc3c7;
-            pointer-events: none;
-            /* Non cliccabile */
+            background: #bdc3c7; pointer-events: none;
         }
-
-        .file-card.uploading .icon,
-        .file-card.uploading .name {
-            opacity: 0.3;
-        }
-
-        /* Oscurato */
-
-        /* Overlay con freccia animata e statistiche */
+        .file-card.uploading .icon, .file-card.uploading .name { opacity: 0.3; }
+        
+        /* Overlay statistiche */
         .upload-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: #2c3e50;
-            font-weight: bold;
-            border-radius: 8px;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: #2c3e50; font-weight: bold; border-radius: 8px;
         }
-
         .animated-arrow {
-            font-size: 28px;
+            font-size: 24px;
             animation: uploadBounce 1s infinite ease-in-out;
+            margin-bottom: 5px;
         }
-
         @keyframes uploadBounce {
-
-            0%,
-            100% {
-                transform: translateY(5px);
-            }
-
-            50% {
-                transform: translateY(-5px);
-            }
+            0%, 100% { transform: translateY(3px); }
+            50% { transform: translateY(-3px); }
         }
-
-        .stats {
-            font-size: 11px;
-            margin-top: 10px;
-            background: rgba(255, 255, 255, 0.7);
-            padding: 2px 6px;
-            border-radius: 4px;
+        
+        /* Box bianco semi-trasparente per le scritte */
+        .stats { 
+            font-size: 10px; background: rgba(255,255,255,0.9); 
+            padding: 6px; border-radius: 6px; width: 85%; text-align: center;
+            display: flex; flex-direction: column; gap: 3px;
         }
+        .stats .percent { font-size: 14px; font-weight: bold; color: #2980b9; }
+
     </style>
 </head>
-
 <body>
 
     <div class="text-section">
@@ -174,7 +79,6 @@
 
     <div class="toolbar">
         <input type="file" id="file-input">
-        <span id="upload-status" style="font-size: 14px; color: #f1c40f;"></span>
     </div>
 
     <div class="files-section" id="files-container"></div>
@@ -186,7 +90,7 @@
         const fileInput = document.getElementById('file-input');
         const filesContainer = document.getElementById('files-container');
 
-        // Helper per formattare i Byte in KB o MB
+        // Helper: Converti byte in KB, MB ecc.
         function formatBytes(bytes) {
             if (bytes === 0) return '0 B';
             const k = 1024, sizes = ['B', 'KB', 'MB', 'GB'];
@@ -194,7 +98,7 @@
             return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
         }
 
-        // Helper per scegliere l'emoji
+        // Helper: Emoji per tipo file
         function getIcon(filename) {
             if (filename.match(/\.(jpg|jpeg|png|gif)$/i)) return '🖼️';
             if (filename.match(/\.(mp4|mov|avi)$/i)) return '🎥';
@@ -207,13 +111,13 @@
         socket.on('text_update', (text) => textarea.value = text);
         textarea.addEventListener('input', (e) => socket.emit('text_change', e.target.value));
 
-        // --- GESTIONE FILE: AVVIO E RICEZIONE ---
+        // --- GESTIONE FILE: RICEZIONE INIZIALE ---
         socket.on('init_files', (files) => {
             filesContainer.innerHTML = '';
             files.forEach(renderFileCard);
         });
 
-        // Quando parte un caricamento (nostro o altrui)
+        // --- GESTIONE FILE: CARTA FANTASMA ---
         function createGhostCard(data) {
             const card = document.createElement('div');
             card.className = 'file-card uploading';
@@ -225,28 +129,31 @@
                 <div class="upload-overlay">
                     <div class="animated-arrow">⬆️</div>
                     <div class="stats">
-                        <div class="total-size">${formatBytes(data.size)}</div>
+                        <div class="percent" id="percent-${data.tempId}">0%</div>
+                        <div class="transfer" id="transfer-${data.tempId}">0 B / ${formatBytes(data.size)}</div>
                         <div class="speed" id="speed-${data.tempId}">Calcolo...</div>
                     </div>
                 </div>
             `;
-            filesContainer.prepend(card); // Mettiamolo all'inizio!
+            filesContainer.prepend(card);
         }
 
         socket.on('upload_started', createGhostCard);
 
+        // Quando qualcuno aggiorna il progresso, aggiorniamo l'interfaccia
         socket.on('upload_progress', (data) => {
-            const speedElement = document.getElementById(`speed-${data.tempId}`);
-            if (speedElement) speedElement.textContent = data.speed;
+            const percentEl = document.getElementById(`percent-${data.tempId}`);
+            const transferEl = document.getElementById(`transfer-${data.tempId}`);
+            const speedEl = document.getElementById(`speed-${data.tempId}`);
+
+            if (percentEl) percentEl.textContent = `${data.percent}%`;
+            if (transferEl) transferEl.textContent = `${data.loadedText} / ${data.totalText}`;
+            if (speedEl) speedEl.textContent = data.speed;
         });
 
-        // Quando il file è definitivo
         socket.on('new_file', (fileInfo) => {
-            // Rimuovi la carta fantasma
             const ghost = document.getElementById(`ghost-${fileInfo.tempId}`);
             if (ghost) ghost.remove();
-
-            // Crea la carta vera cliccabile
             renderFileCard(fileInfo);
         });
 
@@ -256,67 +163,73 @@
         });
 
 
-        // --- LOGICA DI UPLOAD CON CALCOLO VELOCITÀ ---
+        // --- LOGICA DI UPLOAD DA PARTE NOSTRA ---
         fileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (!file) return;
 
-            // Generiamo un ID temporaneo univoco per questo caricamento
             const tempId = 'temp_' + Date.now();
-
             const startData = { tempId, name: file.name, size: file.size };
-
-            // Creiamo subito l'icona fantasma per NOI stessi
+            
             createGhostCard(startData);
-
-            // Avvisiamo gli ALTRI di creare la loro icona fantasma
             socket.emit('upload_started', startData);
 
-            // Importante: appendiamo tempId PRIMA del file, così Multer lo legge prima
             const formData = new FormData();
-            formData.append('tempId', tempId);
+            formData.append('tempId', tempId); 
             formData.append('file', file);
 
             const xhr = new XMLHttpRequest();
-
-            // Variabili per calcolare la velocità
+            
             let lastLoadedBytes = 0;
             let lastTime = Date.now();
+            let currentSpeedText = "Calcolo..."; // Velocità base
 
             xhr.upload.onprogress = (event) => {
                 if (event.lengthComputable) {
                     const now = Date.now();
-                    const timeDiff = (now - lastTime) / 1000; // in secondi
+                    const timeDiff = (now - lastTime) / 1000;
 
-                    // Aggiorniamo la velocità ogni 500ms per non far impazzire i numeri
+                    // 1. Calcoliamo la VELOCITÀ solo ogni mezzo secondo per evitare sfarfallii
                     if (timeDiff > 0.5) {
                         const bytesDiff = event.loaded - lastLoadedBytes;
-                        const speedBps = bytesDiff / timeDiff; // Byte al secondo
-                        const speedText = formatBytes(speedBps) + '/s';
-
-                        // Aggiorniamo la NOSTRA icona fantasma
-                        const speedElement = document.getElementById(`speed-${tempId}`);
-                        if (speedElement) speedElement.textContent = speedText;
-
-                        // Avvisiamo gli ALTRI della nostra velocità
-                        socket.emit('upload_progress', { tempId, speed: speedText });
+                        const speedBps = bytesDiff / timeDiff;
+                        currentSpeedText = formatBytes(speedBps) + '/s';
 
                         lastLoadedBytes = event.loaded;
                         lastTime = now;
                     }
+
+                    // 2. Calcoliamo PERCENTUALE e TRASFERIMENTO istantaneamente
+                    const percent = Math.round((event.loaded / event.total) * 100);
+                    const loadedText = formatBytes(event.loaded);
+                    const totalText = formatBytes(event.total);
+
+                    // 3. Aggiorniamo la NOSTRA carta fantasma
+                    const percentEl = document.getElementById(`percent-${tempId}`);
+                    const transferEl = document.getElementById(`transfer-${tempId}`);
+                    const speedEl = document.getElementById(`speed-${tempId}`);
+                    
+                    if (percentEl) percentEl.textContent = `${percent}%`;
+                    if (transferEl) transferEl.textContent = `${loadedText} / ${totalText}`;
+                    if (speedEl) speedEl.textContent = currentSpeedText;
+
+                    // 4. Trasmettiamo tutti i dati aggregati agli ALTRI socket
+                    socket.emit('upload_progress', { 
+                        tempId, 
+                        percent,
+                        loadedText,
+                        totalText,
+                        speed: currentSpeedText 
+                    });
                 }
             };
 
-            xhr.onload = () => {
-                fileInput.value = '';
-            };
-
+            xhr.onload = () => { fileInput.value = ''; };
             xhr.open('POST', '/upload', true);
             xhr.send(formData);
         });
 
-
-        // --- FUNZIONI UI STANDARD ---
+        // --- CARTA DEFINITIVA ---
         function renderFileCard(fileInfo) {
             const card = document.createElement('div');
             card.className = 'file-card';
@@ -324,8 +237,7 @@
 
             const link = document.createElement('a');
             link.href = fileInfo.url;
-            // link.target = "_blank";
-            link.download = fileInfo.name
+            link.download = fileInfo.name; // Forza il download come richiesto!
             link.style.textDecoration = 'none'; link.style.color = 'inherit';
             link.innerHTML = `
                 <div class="icon">${getIcon(fileInfo.name)}</div>
@@ -344,10 +256,8 @@
 
             card.appendChild(link);
             card.appendChild(deleteBtn);
-            // prepend per inserirlo all'inizio della lista
-            filesContainer.prepend(card);
+            filesContainer.prepend(card); 
         }
     </script>
 </body>
-
 </html>
