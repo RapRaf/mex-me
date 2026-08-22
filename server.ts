@@ -34,6 +34,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 const REDIS_TEXT_KEY = 'shared_textarea_content';
 const REDIS_FILES_KEY = 'shared_files_list';
 
+const connectedClients = new Map<string, string>();
+
 async function getSharedFiles(): Promise<any[]> {
     const data = await redisClient.get(REDIS_FILES_KEY);
     return data ? JSON.parse(data) : [];
@@ -43,72 +45,100 @@ async function saveSharedFiles(files: any[]) {
     await redisClient.set(REDIS_FILES_KEY, JSON.stringify(files));
 }
 
-// Rotta HTTP
 app.post('/upload', upload.single('file'), async (req, res) => {
     if (!req.file) return res.status(400).send('Nessun file caricato.');
-
     const fileInfo = {
         id: req.file.filename,
-        tempId: req.body.tempId, // Catturiamo l'ID temporaneo inviato dal client
+        tempId: req.body.tempId,
         url: `/uploads/${req.file.filename}`,
         name: req.file.originalname,
         size: req.file.size
     };
-
     const files = await getSharedFiles();
     files.push(fileInfo);
     await saveSharedFiles(files);
-
-    // Diciamo a tutti che il file definitivo è pronto
     io.emit('new_file', fileInfo);
-
     res.json({ success: true, fileInfo });
 });
 
+// --- FUNZIONE CORRETTA PER IL NUOVO CLIENT ---
+function broadcastActiveClients() {
+    const clientsData = Array.from(connectedClients.entries()).map(([id, ip]) => {
+        return { id: id, ip: ip };
+    });
+    io.emit('clients_update', clientsData);
+}
+
+
 async function startServer() {
     await redisClient.connect();
-    console.log('Connesso a Redis.');
 
     io.on('connection', async (socket) => {
+        // --- GESTIONE IP (Mantenuta per i log del server) ---
+        let rawIp = socket.handshake.headers['x-forwarded-for'] || socket.handshake.address;
+        if (Array.isArray(rawIp)) rawIp = rawIp[0];
+        if (typeof rawIp === 'string') rawIp = rawIp.split(',')[0].trim();
+        const cleanIp = rawIp?.replace(/^::ffff:/, '') || 'Sconosciuto';
+
+        connectedClients.set(socket.id, cleanIp);
+        broadcastActiveClients();
+        console.log(`${getLogDate()} Client connesso: ${socket.id} (IP: ${cleanIp})`);
+
+        // --- GESTIONE DATI INIZIALI ---
         const currentText = await redisClient.get(REDIS_TEXT_KEY) || '';
         socket.emit('init_text', currentText);
         socket.emit('init_files', await getSharedFiles());
 
+        // --- GESTIONE EVENTI ---
         socket.on('text_change', async (newText: string) => {
             await redisClient.set(REDIS_TEXT_KEY, newText);
             socket.broadcast.emit('text_update', newText);
         });
 
-        // ----------------------------------------------------
-        // NUOVI EVENTI PER IL PROGRESSO IN TEMPO REALE
-        // ----------------------------------------------------
         socket.on('upload_started', (data) => {
-            // Avvisa gli altri di creare l'icona oscurata
             socket.broadcast.emit('upload_started', data);
         });
 
         socket.on('upload_progress', (data) => {
-            // Inoltra l'aggiornamento di velocità e percentuale agli altri
             socket.broadcast.emit('upload_progress', data);
         });
-        // ----------------------------------------------------
 
         socket.on('delete_file', async (fileId: string) => {
             let files = await getSharedFiles();
             files = files.filter(f => f.id !== fileId);
             await saveSharedFiles(files);
-
             const filePath = path.join(uploadDir, fileId);
             if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-
             io.emit('file_deleted', fileId);
+        });
+
+        socket.on('disconnect', () => {
+            console.log(`${getLogDate()} Client disconnesso: ${socket.id}`);
+            connectedClients.delete(socket.id);
+            broadcastActiveClients();
         });
     });
 
     const PORT = process.env.PORT || 3003;
-
     httpServer.listen(PORT, () => {
+        console.log(`${getLogDate()} Server avviato e in ascolto sulla porta ${PORT}`);
     });
 }
+
+// Funzione per ottenere la data formattata [DD-MM-YYYY HH:mm:ss]
+function getLogDate() {
+    const now = new Date();
+    const pad = (n: any) => String(n).padStart(2, '0'); // Aggiunge lo zero iniziale
+
+    const d = pad(now.getDate());
+    const m = pad(now.getMonth() + 1); // I mesi partono da 0 in JS
+    const y = now.getFullYear();
+    const H = pad(now.getHours());
+    const i = pad(now.getMinutes());
+    const s = pad(now.getSeconds());
+
+    return `[${d}-${m}-${y} ${H}:${i}:${s}]`;
+}
+
 
 startServer().catch(console.error);

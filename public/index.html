@@ -1,96 +1,571 @@
 <!DOCTYPE html>
 <html lang="it">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MexMe - Clipboard</title>
+    <title>MexMe - Appunti</title>
     <style>
-        body, html {
-            margin: 0; padding: 0; height: 100vh;
-            font-family: Arial, sans-serif; display: flex; flex-direction: column;
-            overflow: hidden; background-color: #eef2f5;
+        /*--- TEMA GENERALE --- */
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            height: 100dvh;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: row;
+            overflow: hidden;
+            box-sizing: border-box;
+            width: 100%;
         }
 
-        .text-section { flex: 2; display: flex; }
-        textarea { width: 100%; height: 100%; padding: 20px; font-size: 18px; border: none; outline: none; resize: none; box-sizing: border-box; }
+        /*--- SIDEBAR UTENTI ATTIVI --- */
+        .sidebar {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+            display: flex;
+            flex-direction: column;
+            padding: 25px 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
 
-        .toolbar { background: #2c3e50; color: white; padding: 10px 20px; display: flex; align-items: center; gap: 15px; }
+        .sidebar-header {
+            margin-bottom: 20px;
+        }
 
+        .sidebar-title {
+            font-weight: bold;
+            font-size: 16px;
+            color: #2c3e50;
+            margin: 0 0 5px 0;
+        }
+
+        .clients-count {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+
+        .clients-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .client-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            color: #34495e;
+            padding: 10px 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e1e8ed;
+            transition: background 0.2s;
+        }
+
+        .client-item:hover {
+            background: #f1f5f9;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background: #2ecc71;
+            border-radius: 50%;
+            box-shadow: 0 0 5px rgba(46, 204, 113, 0.4);
+        }
+
+        /*--- CONTENITORE PRINCIPALE --- */
+        .main-content {
+            position: relative;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            min-width: 0;
+            width: 100%;
+        }
+
+        /*--- STILE LAVAGNETTA (TEXTAREA) --- */
+        .text-section {
+            flex: 2;
+            display: flex;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .text-section::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 6px;
+            background-color: #3498db;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100%;
+            padding: 30px 40px;
+            font-size: 18px;
+            border: none;
+            outline: none;
+            resize: none;
+            box-sizing: border-box;
+            background: transparent;
+            color: #2c3e50;
+            line-height: 1.6;
+        }
+
+        textarea::placeholder {
+            color: #bdc3c7;
+            font-style: italic;
+        }
+
+        /*--- TOOLBAR MODERNA --- */
+        .toolbar {
+            background: white;
+            border-radius: 12px;
+            padding: 12px 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+            flex-shrink: 0;
+        }
+
+        .toolbar-title {
+            font-weight: 600;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+
+        .upload-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px rgba(52, 152, 219, 0.2);
+        }
+
+        .upload-btn:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(52, 152, 219, 0.3);
+        }
+
+        .upload-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(52, 152, 219, 0.2);
+        }
+
+        /*--- SEZIONE FILE (DRAG & DROP) --- */
         .files-section {
-            flex: 1; padding: 20px; overflow-y: auto;
-            display: flex; flex-wrap: wrap; gap: 20px; align-content: flex-start;
+            flex: 1;
+            position: relative;
+            background-color: #ffffff;
+            background-image: radial-gradient(#e2e8f0 2px, transparent 2px);
+            background-size: 20px 20px;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
         }
 
-        /* CARD STANDARD - Leggermente ingrandita per contenere le statistiche */
+        .drop-placeholder {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            bottom: 20px;
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.85);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            z-index: 1;
+            transition: all 0.3s ease;
+        }
+
+        .drop-placeholder .icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            opacity: 0.7;
+            transition: all 0.3s ease;
+        }
+
+        .drop-placeholder .text {
+            font-size: 18px;
+            font-weight: 600;
+            color: #718096;
+            text-align: center;
+        }
+
+        .drop-placeholder .subtext {
+            font-size: 13px;
+            color: #a0aec0;
+            margin-top: 6px;
+            text-align: center;
+        }
+
+        #files-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 45px;
+            overflow-y: auto;
+            z-index: 2;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-content: flex-start;
+        }
+
+        .files-section.drag-over .drop-placeholder {
+            border-color: #3498db;
+            background: rgba(241, 248, 255, 0.95);
+            z-index: 10;
+            backdrop-filter: blur(2px);
+        }
+
+        .files-section.drag-over .drop-placeholder .icon {
+            transform: scale(1.1) translateY(-5px);
+            opacity: 1;
+        }
+
+        .files-section.drag-over .drop-placeholder .text {
+            color: #3498db;
+        }
+
+        /*--- CARTE DEI FILE --- */
         .file-card {
-            background: white; border-radius: 8px; width: 130px; height: 140px; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            text-align: center; text-decoration: none; color: #333; transition: transform 0.2s;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 1px solid #e1e8ed;
+            width: 130px;
+            height: 140px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+            text-align: center;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.2s ease;
         }
-        .file-card:hover { transform: translateY(-5px); }
-        .file-card .icon { font-size: 40px; margin-bottom: 5px; }
-        .file-card .name { font-size: 11px; word-break: break-all; padding: 0 5px; }
-        
-        .delete-btn {
-            position: absolute; top: -8px; right: -8px; background: #e74c3c; color: white; border-radius: 50%;
-            width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
-            font-weight: bold; cursor: pointer; font-size: 14px; border: 2px solid white; z-index: 10;
-        }
-        .delete-btn:hover { background: #c0392b; }
 
-        /* CARD FANTASMA (IN CARICAMENTO) */
+        .file-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+            border-color: #d1d8e0;
+        }
+
+        .file-card .icon {
+            font-size: 42px;
+            margin-bottom: 8px;
+        }
+
+        .file-card .name {
+            font-size: 11px;
+            font-weight: 500;
+            color: #4a5568;
+            word-break: break-all;
+            padding: 0 8px;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+            border: 3px solid white;
+            z-index: 10;
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        .delete-btn:hover {
+            background: #c0392b;
+            transform: scale(1.1);
+        }
+
         .file-card.uploading {
-            background: #bdc3c7; pointer-events: none;
+            background: #edf2f7;
+            border-color: #cbd5e1;
+            pointer-events: none;
         }
-        .file-card.uploading .icon, .file-card.uploading .name { opacity: 0.3; }
-        
-        /* Overlay statistiche */
+
+        .file-card.uploading .icon,
+        .file-card.uploading .name {
+            opacity: 0.2;
+        }
+
         .upload-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            color: #2c3e50; font-weight: bold; border-radius: 8px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #2c3e50;
+            border-radius: 12px;
         }
+
         .animated-arrow {
             font-size: 24px;
             animation: uploadBounce 1s infinite ease-in-out;
             margin-bottom: 5px;
+            color: #3498db;
         }
-        @keyframes uploadBounce {
-            0%, 100% { transform: translateY(3px); }
-            50% { transform: translateY(-3px); }
-        }
-        
-        /* Box bianco semi-trasparente per le scritte */
-        .stats { 
-            font-size: 10px; background: rgba(255,255,255,0.9); 
-            padding: 6px; border-radius: 6px; width: 85%; text-align: center;
-            display: flex; flex-direction: column; gap: 3px;
-        }
-        .stats .percent { font-size: 14px; font-weight: bold; color: #2980b9; }
 
+        @keyframes uploadBounce {
+
+            0%,
+            100% {
+                transform: translateY(3px);
+            }
+
+            50% {
+                transform: translateY(-3px);
+            }
+        }
+
+        .stats {
+            font-size: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 8px;
+            border-radius: 8px;
+            width: 85%;
+            box-sizing: border-box;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .stats .percent {
+            font-size: 15px;
+            font-weight: 800;
+            color: #3498db;
+        }
+
+        .stats .transfer {
+            color: #718096;
+            font-size: 9px;
+        }
+
+        .stats .speed {
+            color: #2d3748;
+            font-weight: 600;
+        }
+
+        /*
+        =========================================================
+        MEDIA QUERIES (RESPONSIVE DESIGN PER MOBILE)
+        =========================================================
+        */
+        @media (max-width: 768px) {
+
+            body,
+            html {
+                flex-direction: column;
+                padding: 3px;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                padding: 15px;
+                border-radius: 12px;
+            }
+
+            .sidebar-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 10px;
+            }
+
+            .sidebar-title {
+                margin: 0;
+            }
+
+            .clients-list {
+                flex-direction: row;
+                overflow-x: auto;
+                padding-bottom: 5px;
+                gap: 8px;
+            }
+
+            .client-item {
+                white-space: nowrap;
+                padding: 6px 10px;
+            }
+
+            textarea {
+                padding: 20px 25px;
+                font-size: 16px;
+            }
+
+            .toolbar {
+                padding: 10px 15px;
+                border-radius: 10px;
+            }
+
+            .toolbar-title {
+                display: none;
+            }
+
+            .upload-btn {
+                width: 100%;
+                justify-content: center;
+                padding: 12px;
+            }
+
+            #files-container {
+                padding: 15px;
+                justify-content: center;
+                gap: 15px;
+            }
+
+            .drop-placeholder {
+                display: none;
+            }
+
+            .file-card {
+                width: 100px;
+                height: 110px;
+            }
+
+            .file-card .icon {
+                font-size: 32px;
+            }
+
+            .delete-btn {
+                width: 22px;
+                height: 22px;
+                font-size: 12px;
+                top: -8px;
+                right: -8px;
+            }
+        }
     </style>
 </head>
+
 <body>
-
-    <div class="text-section">
-        <textarea id="shared-textarea" placeholder="Scrivi qui..."></textarea>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">Utenti Connessi</h2>
+            <div class="clients-count" id="clients-count">0 attivi</div>
+        </div>
+        <ul class="clients-list" id="clients-list">
+        </ul>
     </div>
 
-    <div class="toolbar">
-        <input type="file" id="file-input">
+    <div class="main-content">
+        <div class="text-section">
+            <textarea id="shared-textarea"
+                placeholder="Inizia a scrivere... Il testo verrà condiviso istantaneamente."></textarea>
+        </div>
+        <div class="toolbar">
+            <span class="toolbar-title">MexMe</span>
+            <input type="file" id="file-input" style="display: none;">
+            <button class="upload-btn" onclick="document.getElementById('file-input').click()">
+                <span class="icon">📤</span> Carica
+            </button>
+        </div>
+        <div class="files-section">
+            <div class="drop-placeholder">
+                <div class="icon">📥</div>
+                <div class="text">Trascina i tuoi file qui</div>
+                <div class="subtext">oppure usa il pulsante in alto per sfogliare</div>
+            </div>
+            <div id="files-container"></div>
+        </div>
     </div>
-
-    <div class="files-section" id="files-container"></div>
-
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        const socket = io();
+        // Safeguard for the preview environment
+        const socket = typeof io !== 'undefined' ? io() : { on: () => { }, emit: () => { } };
+
         const textarea = document.getElementById('shared-textarea');
         const fileInput = document.getElementById('file-input');
         const filesContainer = document.getElementById('files-container');
 
-        // Helper: Converti byte in KB, MB ecc.
+        // Elementi della sidebar
+        const clientsList = document.getElementById('clients-list');
+        const clientsCount = document.getElementById('clients-count');
+
+        // --- GESTIONE UTENTI CONNESSI (ID + IP) ---
+        socket.on('clients_update', (clientsData) => {
+            clientsList.innerHTML = ''; // Pulisce la lista
+
+            const count = clientsData.length;
+            clientsCount.textContent = `${count} ${count === 1 ? 'attivo' : 'attivi'}`;
+
+            clientsData.forEach(client => {
+                const li = document.createElement('li');
+                li.className = 'client-item';
+
+                // Ora possiamo confrontare l'id del socket con quello ricevuto dal server
+                const isMe = socket.id === client.id;
+
+                // Se sei tu, mostra "Tu (IP)", altrimenti solo "IP: ..."
+                const displayName = isMe ? `Tu (${client.ip})` : `IP: ${client.ip}`;
+
+                li.innerHTML = `
+            <div class="status-dot"></div>
+            <span style="${isMe ? 'font-weight: bold;' : ''}">${displayName}</span>
+        `;
+                clientsList.appendChild(li);
+            });
+        });
+
+
+        // --- FUNZIONI DI UTILITA' ---
         function formatBytes(bytes) {
             if (bytes === 0) return '0 B';
             const k = 1024, sizes = ['B', 'KB', 'MB', 'GB'];
@@ -98,7 +573,6 @@
             return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
         }
 
-        // Helper: Emoji per tipo file
         function getIcon(filename) {
             if (filename.match(/\.(jpg|jpeg|png|gif)$/i)) return '🖼️';
             if (filename.match(/\.(mp4|mov|avi)$/i)) return '🎥';
@@ -111,18 +585,16 @@
         socket.on('text_update', (text) => textarea.value = text);
         textarea.addEventListener('input', (e) => socket.emit('text_change', e.target.value));
 
-        // --- GESTIONE FILE: RICEZIONE INIZIALE ---
+        // --- GESTIONE FILE DOM ---
         socket.on('init_files', (files) => {
             filesContainer.innerHTML = '';
             files.forEach(renderFileCard);
         });
 
-        // --- GESTIONE FILE: CARTA FANTASMA ---
         function createGhostCard(data) {
             const card = document.createElement('div');
             card.className = 'file-card uploading';
             card.id = `ghost-${data.tempId}`;
-
             card.innerHTML = `
                 <div class="icon">${getIcon(data.name)}</div>
                 <div class="name">${data.name}</div>
@@ -139,13 +611,10 @@
         }
 
         socket.on('upload_started', createGhostCard);
-
-        // Quando qualcuno aggiorna il progresso, aggiorniamo l'interfaccia
         socket.on('upload_progress', (data) => {
             const percentEl = document.getElementById(`percent-${data.tempId}`);
             const transferEl = document.getElementById(`transfer-${data.tempId}`);
             const speedEl = document.getElementById(`speed-${data.tempId}`);
-
             if (percentEl) percentEl.textContent = `${data.percent}%`;
             if (transferEl) transferEl.textContent = `${data.loadedText} / ${data.totalText}`;
             if (speedEl) speedEl.textContent = data.speed;
@@ -162,64 +631,48 @@
             if (card) card.remove();
         });
 
-
-        // --- LOGICA DI UPLOAD DA PARTE NOSTRA ---
-        fileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
+        // --- CARICAMENTO FILE (AJAX) ---
+        function uploadFile(file) {
             if (!file) return;
-
             const tempId = 'temp_' + Date.now();
             const startData = { tempId, name: file.name, size: file.size };
-            
             createGhostCard(startData);
             socket.emit('upload_started', startData);
 
             const formData = new FormData();
-            formData.append('tempId', tempId); 
+            formData.append('tempId', tempId);
             formData.append('file', file);
 
             const xhr = new XMLHttpRequest();
-            
             let lastLoadedBytes = 0;
             let lastTime = Date.now();
-            let currentSpeedText = "Calcolo..."; // Velocità base
+            let currentSpeedText = "Calcolo...";
 
             xhr.upload.onprogress = (event) => {
                 if (event.lengthComputable) {
                     const now = Date.now();
                     const timeDiff = (now - lastTime) / 1000;
-
-                    // 1. Calcoliamo la VELOCITÀ solo ogni mezzo secondo per evitare sfarfallii
                     if (timeDiff > 0.5) {
                         const bytesDiff = event.loaded - lastLoadedBytes;
                         const speedBps = bytesDiff / timeDiff;
                         currentSpeedText = formatBytes(speedBps) + '/s';
-
                         lastLoadedBytes = event.loaded;
                         lastTime = now;
                     }
-
-                    // 2. Calcoliamo PERCENTUALE e TRASFERIMENTO istantaneamente
                     const percent = Math.round((event.loaded / event.total) * 100);
                     const loadedText = formatBytes(event.loaded);
                     const totalText = formatBytes(event.total);
 
-                    // 3. Aggiorniamo la NOSTRA carta fantasma
                     const percentEl = document.getElementById(`percent-${tempId}`);
                     const transferEl = document.getElementById(`transfer-${tempId}`);
                     const speedEl = document.getElementById(`speed-${tempId}`);
-                    
+
                     if (percentEl) percentEl.textContent = `${percent}%`;
                     if (transferEl) transferEl.textContent = `${loadedText} / ${totalText}`;
                     if (speedEl) speedEl.textContent = currentSpeedText;
 
-                    // 4. Trasmettiamo tutti i dati aggregati agli ALTRI socket
-                    socket.emit('upload_progress', { 
-                        tempId, 
-                        percent,
-                        loadedText,
-                        totalText,
-                        speed: currentSpeedText 
+                    socket.emit('upload_progress', {
+                        tempId, percent, loadedText, totalText, speed: currentSpeedText
                     });
                 }
             };
@@ -227,23 +680,41 @@
             xhr.onload = () => { fileInput.value = ''; };
             xhr.open('POST', '/upload', true);
             xhr.send(formData);
+        }
+
+        fileInput.addEventListener('change', (e) => uploadFile(e.target.files[0]));
+
+        // --- DRAG & DROP ---
+        const dropZone = document.querySelector('.files-section');
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+        function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.add('drag-over'), false);
+        });
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.remove('drag-over'), false);
+        });
+        dropZone.addEventListener('drop', (e) => {
+            const files = e.dataTransfer.files;
+            if (files && files.length > 0) uploadFile(files[0]);
         });
 
-        // --- CARTA DEFINITIVA ---
+        // --- RENDERING FILE CARD ---
         function renderFileCard(fileInfo) {
             const card = document.createElement('div');
             card.className = 'file-card';
             card.id = `file-${fileInfo.id}`;
-
             const link = document.createElement('a');
             link.href = fileInfo.url;
-            link.download = fileInfo.name; // Forza il download come richiesto!
+            link.download = fileInfo.name;
             link.style.textDecoration = 'none'; link.style.color = 'inherit';
             link.innerHTML = `
                 <div class="icon">${getIcon(fileInfo.name)}</div>
-                <div class="name">${fileInfo.name}</div>
+                <div class="name" title="${fileInfo.name}">${fileInfo.name}</div>
             `;
-
             const deleteBtn = document.createElement('div');
             deleteBtn.className = 'delete-btn';
             deleteBtn.innerHTML = '×';
@@ -253,11 +724,11 @@
                     socket.emit('delete_file', fileInfo.id);
                 }
             };
-
             card.appendChild(link);
             card.appendChild(deleteBtn);
-            filesContainer.prepend(card); 
+            filesContainer.prepend(card);
         }
     </script>
 </body>
+
 </html>
