@@ -120,7 +120,8 @@ async function startServer() {
     });
 
     const PORT = process.env.PORT || 3003;
-    httpServer.listen(PORT, () => {
+    const HOST = process.env.HOST || 'localhost'
+    httpServer.listen({port: PORT, host: HOST}, () => {
         console.log(`${getLogDate()} Server avviato e in ascolto sulla porta ${PORT}`);
     });
 }
