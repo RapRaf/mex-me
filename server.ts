@@ -9,6 +9,10 @@ import 'dotenv/config';
 
 const app = express();
 const httpServer = createServer(app);
+
+httpServer.requestTimeout = 0; 
+httpServer.headersTimeout = 0;
+
 const io = new Server(httpServer);
 
 const uploadDir = path.join(__dirname, 'public', 'uploads');
