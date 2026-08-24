@@ -550,19 +550,20 @@
                 const li = document.createElement('li');
                 li.className = 'client-item';
 
-                // Ora possiamo confrontare l'id del socket con quello ricevuto dal server
                 const isMe = socket.id === client.id;
 
-                // Se sei tu, mostra "Tu (IP)", altrimenti solo "IP: ..."
-                const displayName = isMe ? `Tu (${client.ip})` : `IP: ${client.ip}`;
+                // client.name ora arriva dal server (es. "Raffa" oppure l'IP crudo)
+                const displayName = isMe ? `Tu (${client.name})` : client.name;
 
                 li.innerHTML = `
-            <div class="status-dot"></div>
-            <span style="${isMe ? 'font-weight: bold;' : ''}">${displayName}</span>
-        `;
+                    <div class="status-dot"></div>
+                    <span style="${isMe ? 'font-weight: bold;' : ''}">${displayName}</span>
+                `;
+
                 clientsList.appendChild(li);
             });
         });
+
 
 
         // --- FUNZIONI DI UTILITA' ---

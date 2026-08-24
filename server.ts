@@ -10,10 +10,20 @@ import 'dotenv/config';
 const app = express();
 const httpServer = createServer(app);
 
-httpServer.requestTimeout = 0; 
+httpServer.requestTimeout = 0;
 httpServer.headersTimeout = 0;
 
 const io = new Server(httpServer);
+
+let knownIPs: Record<string, string> = {};
+try {
+    if (process.env.KNOWN_IPS) {
+        knownIPs = JSON.parse(process.env.KNOWN_IPS);
+    }
+} catch (error) {
+    console.error("Errore nel parsing di KNOWN_IPS dal file .env:", error);
+}
+
 
 const uploadDir = path.join(__dirname, 'public', 'uploads');
 if (!fs.existsSync(uploadDir)) {
@@ -67,9 +77,20 @@ app.post('/upload', upload.single('file'), async (req, res) => {
 
 // --- FUNZIONE CORRETTA PER IL NUOVO CLIENT ---
 function broadcastActiveClients() {
-    const clientsData = Array.from(connectedClients.entries()).map(([id, ip]) => {
-        return { id: id, ip: ip };
+    // const clientsData = Array.from(connectedClients.entries()).map(([id, ip]) => {
+    //     return { id: id, ip: ip };
+    // });
+    const clientsData = Array.from(io.sockets.sockets.values()).map(socket => {
+        const clientIP = socket.handshake.address; // o come estrai l'IP attualmente
+
+        return {
+            id: socket.id,
+            ip: clientIP,
+            // Mappa qui il nome! Se non lo trova, usa l'IP come fallback
+            name: knownIPs[clientIP] || clientIP
+        };
     });
+
     io.emit('clients_update', clientsData);
 }
 
@@ -125,7 +146,7 @@ async function startServer() {
 
     const PORT = process.env.PORT || 3003;
     const HOST = process.env.HOST || 'localhost'
-    httpServer.listen({port: PORT, host: HOST}, () => {
+    httpServer.listen({ port: PORT, host: HOST }, () => {
         console.log(`${getLogDate()} Server avviato e in ascolto sulla porta ${PORT}`);
     });
 }
