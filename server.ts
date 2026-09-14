@@ -13,7 +13,17 @@ const httpServer = createServer(app);
 httpServer.requestTimeout = 0;
 httpServer.headersTimeout = 0;
 
-const io = new Server(httpServer);
+const io = new Server(httpServer, {
+    allowRequest: (req, callback) => {
+        const clientIp = getClientIp(req);
+        const allowed = isKnownIp(clientIp);
+        if (!allowed) {
+            console.warn(`${getLogDate()} Connessione socket.io negata per IP non autorizzato: ${clientIp}`);
+        }
+        // Se allowed è false, engine.io risponde automaticamente con 403.
+        callback(null, allowed);
+    }
+});
 
 let knownIPs: Record<string, string> = {};
 try {
@@ -24,6 +34,34 @@ try {
     console.error("Errore nel parsing di KNOWN_IPS dal file .env:", error);
 }
 
+// Estrae l'IP reale della connessione TCP. Non ci si fida di X-Forwarded-For
+// per il controllo accessi (è liberamente falsificabile dal client) perché
+// non c'è un reverse proxy davanti a questo server (ascolta direttamente
+// su HOST/PORT). Se in futuro viene aggiunto un proxy, questa funzione va
+// aggiornata per leggere l'header solo se la richiesta arriva da quell'host.
+function getClientIp(req: { socket: { remoteAddress?: string } }): string {
+    const rawIp = req.socket.remoteAddress;
+    return rawIp?.replace(/^::ffff:/, '') || 'Sconosciuto';
+}
+
+function isKnownIp(ip: string): boolean {
+    // Se KNOWN_IPS è vuota (o non impostata), l'accesso non è ristretto:
+    // consentito a chiunque.
+    if (Object.keys(knownIPs).length === 0) return true;
+    return Object.prototype.hasOwnProperty.call(knownIPs, ip);
+}
+
+// Blocca con 403 tutte le richieste HTTP (statiche, /upload, ecc.) che non
+// provengono da un IP presente in KNOWN_IPS.
+app.use((req, res, next) => {
+    const clientIp = getClientIp(req);
+    if (!isKnownIp(clientIp)) {
+        console.warn(`${getLogDate()} Accesso HTTP negato per IP non autorizzato: ${clientIp}`);
+        res.status(403).send('Forbidden: IP non autorizzato.');
+        return;
+    }
+    next();
+});
 
 const uploadDir = path.join(__dirname, 'public', 'uploads');
 if (!fs.existsSync(uploadDir)) {
