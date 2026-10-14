@@ -34,14 +34,22 @@ try {
     console.error("Errore nel parsing di KNOWN_IPS dal file .env:", error);
 }
 
-// Estrae l'IP reale della connessione TCP. Non ci si fida di X-Forwarded-For
-// per il controllo accessi (è liberamente falsificabile dal client) perché
-// non c'è un reverse proxy davanti a questo server (ascolta direttamente
-// su HOST/PORT). Se in futuro viene aggiunto un proxy, questa funzione va
-// aggiornata per leggere l'header solo se la richiesta arriva da quell'host.
-function getClientIp(req: { socket: { remoteAddress?: string } }): string {
-    const rawIp = req.socket.remoteAddress;
-    return rawIp?.replace(/^::ffff:/, '') || 'Sconosciuto';
+// Proxy fidati: nginx gira sulla stessa macchina e inoltra su loopback.
+const TRUSTED_PROXIES = new Set(['127.0.0.1', '::1']);
+
+// Estrae l'IP reale del client. Se la connessione TCP arriva da un proxy
+// fidato (nginx), si usa X-Real-IP, che nginx sovrascrive con $remote_addr
+// e quindi non è falsificabile dal client. In tutti gli altri casi si usa
+// l'IP della connessione TCP e gli header vengono ignorati.
+function getClientIp(req: { socket: { remoteAddress?: string }, headers: Record<string, string | string[] | undefined> }): string {
+    const socketIp = req.socket.remoteAddress?.replace(/^::ffff:/, '');
+    if (socketIp && TRUSTED_PROXIES.has(socketIp)) {
+        const realIp = req.headers['x-real-ip'];
+        if (typeof realIp === 'string' && realIp.trim()) {
+            return realIp.trim().replace(/^::ffff:/, '');
+        }
+    }
+    return socketIp || 'Sconosciuto';
 }
 
 function isKnownIp(ip: string): boolean {
@@ -119,7 +127,7 @@ function broadcastActiveClients() {
     //     return { id: id, ip: ip };
     // });
     const clientsData = Array.from(io.sockets.sockets.values()).map(socket => {
-        const clientIP = socket.handshake.address; // o come estrai l'IP attualmente
+        const clientIP = getClientIp(socket.request);
 
         return {
             id: socket.id,
@@ -138,10 +146,7 @@ async function startServer() {
 
     io.on('connection', async (socket) => {
         // --- GESTIONE IP (Mantenuta per i log del server) ---
-        let rawIp = socket.handshake.headers['x-forwarded-for'] || socket.handshake.address;
-        if (Array.isArray(rawIp)) rawIp = rawIp[0];
-        if (typeof rawIp === 'string') rawIp = rawIp.split(',')[0].trim();
-        const cleanIp = rawIp?.replace(/^::ffff:/, '') || 'Sconosciuto';
+        const cleanIp = getClientIp(socket.request);
 
         connectedClients.set(socket.id, cleanIp);
         broadcastActiveClients();
