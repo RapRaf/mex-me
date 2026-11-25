@@ -51,7 +51,7 @@ export async function upload(taskId, files) {
     const f = files[i], pre = files.length > 1 ? `Caricamento ${i + 1} di ${files.length}` : `Caricamento di ${f.name}`;
     setSave(pre + '…');
     try {
-      await sendFile(f, { taskId, profile: app.profile }, (l, tot) => setSave(`${pre} · ${Math.round(l / tot * 100)}%`)).promise;
+      await sendFile(f, { taskId }, (l, tot) => setSave(`${pre} · ${Math.round(l / tot * 100)}%`)).promise;
       ok++;
     } catch (e) {
       errs.push(f.name + (e.status === 413 ? ' (troppo grande per il server)' : e.code === 'not_found' ? ' (il task non esiste più)' : ''));

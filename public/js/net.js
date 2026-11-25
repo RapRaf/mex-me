@@ -2,8 +2,7 @@
 import { db, app, rebuild, rebuildAtt, rebuildCom, desc, idx, renderAll, banner, setSave } from './state.js';
 import { today, isDate, st } from './util.js';
 
-/** Il profilo della scheda viaggia nella stretta di mano, anche a ogni riconnessione. */
-export const socket = window.io({ auth: cb => cb({ profile: app.profile }) });
+export const socket = window.io();
 
 /** Id generati dal client per mostrare subito ciò che si crea (il server li valida). */
 export function rid() {
@@ -16,7 +15,7 @@ export const ask = (event, payload) => new Promise(res => socket.emit(event, pay
 
 export function writeErr(r) {
   const c = r && r.error;
-  if (c === 'no_profile') banner('La sessione non è più valida: esci e scegli di nuovo il tuo profilo.');
+  if (c === 'no_profile') banner('Il tuo indirizzo non è più associato a un profilo: ricarica la pagina.');
   else if (c === 'not_found') banner('Non esiste più: forse qualcuno l’ha appena eliminato.');
   else if (c === 'forbidden') banner(r.message ? r.message.charAt(0).toUpperCase() + r.message.slice(1) + '.' : 'Operazione non permessa.');
   else if (c === 'bad_request') banner('Dati non validi: ricarica la pagina e riprova.');
@@ -145,6 +144,7 @@ function reindex(col) {
 }
 
 socket.on('diario:init', d => {
+  app.profile = typeof d.me === 'string' ? d.me : null;  // profilo deciso dal server in base all'IP
   db.users = byId(d.users);
   db.tasks = byId((d.tasks || []).map(withLocal));
   db.comments = byId(d.comments);

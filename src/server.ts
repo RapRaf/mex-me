@@ -5,7 +5,7 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { PORT, HOST, PUBLIC_DIR, DATA_DIR } from './config';
 import { httpGuard, socketGuard } from './access';
-import { ensureDefaultUsers } from './data';
+import { syncProfilesFromIps } from './data';
 import { flushAll, startBackups } from './store';
 import { setIo, type SocketData } from './hub';
 import { filesRouter } from './files';
@@ -49,7 +49,7 @@ async function firstRunMigration() {
 }
 
 async function start() {
-    ensureDefaultUsers();
+    syncProfilesFromIps();
     await firstRunMigration();
     startBackups(DATA_DIR);
     io.on('connection', onConnection);

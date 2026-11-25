@@ -21,12 +21,3 @@ export const KNOWN_IPS: Record<string, string> = (() => {
         return {};
     }
 })();
-
-// Profili creati al primo avvio se la collezione users è vuota.
-// c = indice del colore persona (vedi COLORS in public/js/util.js).
-export const DEFAULT_USERS = [
-    { id: 'raffa', name: 'Raffa', c: 0, order: 1 },
-    { id: 'giada', name: 'Giada', c: 1, order: 2 },
-    { id: 'ludo', name: 'Ludo', c: 4, order: 3 },
-    { id: 'pab', name: 'Pab', c: 2, order: 4 },
-];

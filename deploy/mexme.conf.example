@@ -1,0 +1,43 @@
+# Modello della configurazione nginx di MexMe.
+# Copialo in deploy/mexme.conf (escluso da git), sostituisci i valori <…> e
+# applicalo con deploy/update-nginx.sh. Gli IP ammessi qui devono coincidere
+# con KNOWN_IPS nel .env.
+server {
+    listen <IP_SERVER>:3003 ssl;
+    server_name <IP_SERVER>;
+
+    error_log <CARTELLA_APP>/logs/nginx/error.log error;
+    access_log <CARTELLA_APP>/logs/nginx/access.log main;
+
+    ssl_certificate <PERCORSO_CERTIFICATO>.pem;
+    ssl_certificate_key <PERCORSO_CHIAVE>.key;
+
+    allow <IP_PERSONA_1>/32;
+    allow <IP_PERSONA_2>/32;
+    deny all;
+
+    # Upload senza limite di dimensione (il default di nginx è 1 MB) e inoltrati
+    # subito all'app, così l'avanzamento è reale e i file grossi non passano dal disco di nginx.
+    client_max_body_size 0;
+    proxy_request_buffering off;
+    # Upload lunghi e connessioni Socket.IO aperte a lungo.
+    proxy_read_timeout 1h;
+    proxy_send_timeout 1h;
+
+    location / {
+        # L'app deve ascoltare solo in locale: HOST=127.0.0.1 nel .env
+        proxy_pass http://127.0.0.1:3003;
+        proxy_http_version 1.1;
+
+        # X-Real-IP è l'unico header di cui l'app si fida (solo da 127.0.0.1)
+        # per riconoscere chi si collega e il suo profilo.
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # WebSocket (Socket.IO)
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}

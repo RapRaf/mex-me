@@ -15,15 +15,14 @@
 <header class="band">
   <div class="in">
     <div class="top">
-      <div><div class="brand">MexMe</div><h1 id="hT">Chi sei?</h1></div>
+      <div><div class="brand">MexMe</div><h1 id="hT"></h1></div>
       <div class="right">
-        <nav class="nav" id="nav" aria-label="Sezioni" hidden><a href="#home" id="nHome">Home</a><a href="#priorita" id="nPrio">Priorità</a><a href="#admin" id="nAdmin">Admin</a><a href="#appunti" id="nClip">Appunti</a></nav>
+        <nav class="nav" id="nav" aria-label="Sezioni" hidden><a href="#home" id="nHome">Home</a><a href="#priorita" id="nPrio">Priorità</a><a href="#visualizzazione" id="nAdmin">Visualizzazione</a><a href="#appunti" id="nClip">Appunti</a></nav>
         <div class="uchip" id="uchip" hidden></div>
       </div>
     </div>
-    <div class="who" id="who">
-      <p>Scegli il tuo profilo per entrare nel diario del team: task, priorità e calendario. Gli appunti qui sotto sono condivisi con tutti, anche senza entrare.</p>
-      <div class="tiles" id="tiles"></div>
+    <div class="who" id="who" hidden>
+      <p>Il tuo indirizzo non è associato a nessun profilo del team: puoi usare gli appunti qui sotto, ma non il diario.</p>
     </div>
     <form class="add" id="add" autocomplete="off" hidden>
       <input id="aT" maxlength="200" placeholder="Scrivi un task e premi Invio…" aria-label="Titolo del nuovo task">
@@ -73,7 +72,7 @@
 
 <main class="wrap" id="admin" hidden>
   <div class="bar">
-    <nav class="tabs" aria-label="Viste admin"><a href="#admin" id="avG">Calendario</a><a href="#admin-lista" id="avL">Agenda</a></nav>
+    <nav class="tabs" aria-label="Viste"><a href="#visualizzazione" id="avG">Calendario</a><a href="#visualizzazione-agenda" id="avL">Agenda</a></nav>
     <div class="afil">
       <select class="fsel" id="fU" aria-label="Persona"></select>
       <select class="fsel" id="fS" aria-label="Stato"><option value="">Tutti gli stati</option><option value="open">Aperti</option><option value="doing">In corso</option><option value="todo">Da fare</option><option value="done">Fatti</option><option value="late">In ritardo</option></select>

@@ -1,5 +1,5 @@
 /* Avvio: rendering di tutte le viste, navigazione via hash, scorciatoie da tastiera.
-   Senza profilo si vedono gli Appunti e la scelta "Chi sei?"; con un profilo il diario. */
+   Con un profilo (dall'IP) si vede il diario; senza, solo gli Appunti. */
 import { $ } from './util.js';
 import { app, setRenderer, renderAll } from './state.js';
 import { markSeen } from './net.js';
@@ -20,24 +20,28 @@ setRenderer(() => {
   renderDlg(); renderFiles(); renderChat();
 });
 
-const VIEWS = { home: 'Task aperti', prio: 'Priorità', admin: 'Admin', clip: 'Appunti' };
+const VIEWS = { home: 'Task aperti', prio: 'Priorità', admin: 'Visualizzazione', clip: 'Appunti' };
 let lastView = '';
 
+// Indirizzi della vecchia vista "Admin", ora "Visualizzazione" (segnalibri).
+const LEGACY = { '#admin': '#visualizzazione', '#admin-lista': '#visualizzazione-agenda' };
+
 function route() {
+  if (LEGACY[location.hash]) history.replaceState(null, '', LEGACY[location.hash]);
   const logged = isLogged(), boot = isBooting(), h = location.hash;
-  const view = !logged ? (boot ? '' : 'clip') : h.startsWith('#admin') ? 'admin' : h === '#priorita' ? 'prio' : h === '#appunti' ? 'clip' : 'home';
+  const view = !logged ? (boot ? '' : 'clip') : h.startsWith('#visualizzazione') ? 'admin' : h === '#priorita' ? 'prio' : h === '#appunti' ? 'clip' : 'home';
   document.body.classList.toggle('anon', !logged);
   for (const v of Object.keys(VIEWS)) $('#' + v).hidden = v !== view;
   $('#nav').hidden = !logged;
   $('#add').hidden = $('#aH').hidden = !(view === 'home' || view === 'prio');
-  const title = !logged ? (boot ? '' : 'Chi sei?') : VIEWS[view];
+  const title = !logged ? (boot ? '' : 'Appunti') : VIEWS[view];
   $('#hT').textContent = title;
-  document.title = title && logged ? `${title} · MexMe` : 'MexMe';
-  setAdminView(h === '#admin-lista' ? 'list' : 'grid');
+  document.title = title ? `${title} · MexMe` : 'MexMe';
+  setAdminView(h === '#visualizzazione-agenda' ? 'list' : 'grid');
   for (const [id, on] of [['#nHome', view === 'home'], ['#nPrio', view === 'prio'], ['#nAdmin', view === 'admin'], ['#nClip', view === 'clip']]) {
     if (on) $(id).setAttribute('aria-current', 'page'); else $(id).removeAttribute('aria-current');
   }
-  // Cambiare vista (o persona) chiude i dialog aperti.
+  // Cambiare vista chiude i dialog aperti.
   const k = view + '|' + app.profile;
   if (k !== lastView) {
     lastView = k;

@@ -26,16 +26,12 @@ function command(s: AppSocket, name: string, fn: (profile: string, payload: any)
 }
 
 const sendDiario = (s: AppSocket) => {
-    s.emit('diario:init', { users: users.all(), tasks: tasks.all(), comments: comments.all(), attachments: attachments.all() });
+    s.emit('diario:init', { me: s.data.profile, users: users.all(), tasks: tasks.all(), comments: comments.all(), attachments: attachments.all() });
     if (s.data.profile) s.emit('diario:seen', seenOf(s.data.profile));
 };
 
 export function onConnection(s: AppSocket) {
-    initSocketData(s);
-    // Il profilo della scheda arriva già nella stretta di mano: alla riconnessione
-    // il client rimanda le scritture in coda prima di qualunque altro messaggio.
-    const auth = s.handshake.auth as { profile?: unknown } | undefined;
-    if (isProfile(auth?.profile)) s.data.profile = auth.profile;
+    initSocketData(s);   // il profilo viene dall'IP: niente scelta lato client
     log(`Client connesso: ${s.id} (IP: ${s.data.ip} · ${s.data.ipName}${s.data.profile ? ' · ' + s.data.profile : ''})`);
 
     s.emit('clip:init', clipboard.data);
@@ -44,16 +40,6 @@ export function onConnection(s: AppSocket) {
 
     // Dopo una scrittura rifiutata il client chiede di nuovo tutti i dati.
     s.on('diario:sync', () => sendDiario(s));
-
-    /* ---------- sessione: profilo scelto in questa scheda ---------- */
-    s.on('session:set', (profile: unknown, ack: unknown) => {
-        const reply = ackOf(ack);
-        if (profile !== null && !isProfile(profile)) { reply({ ok: false, error: 'not_found' }); return; }
-        s.data.profile = profile;
-        log(`${s.data.ipName} (${s.id}) ${profile ? 'è entrato come ' + profile : 'è uscito'}`);
-        reply({ ok: true, seen: profile ? seenOf(profile) : {} });
-        broadcastPresence();
-    });
 
     /* ---------- appunti ---------- */
     s.on('clip:text', (text: unknown) => {

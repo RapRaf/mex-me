@@ -37,23 +37,13 @@ h1{font-size:clamp(30px,4.2vw,44px)}
 .save{font-size:14px;color:var(--mute)}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden}
 
-/* ---------- utente e "Chi sei?" ---------- */
-.uchip{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);border-radius:12px;padding:4px 4px 4px 8px}
+/* ---------- utente ---------- */
+.uchip{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);border-radius:12px;padding:4px 14px 4px 4px}
 .uchip .av{width:34px;height:34px;font-size:13px;box-shadow:0 0 0 2px #fff}
 .uchip b{font-size:15px}
-.uchip button{min-height:36px;border:0;border-radius:9px;background:rgba(255,255,255,.14);color:#fff;font-weight:600;padding:0 12px}
-.uchip button:hover{background:rgba(255,255,255,.24)}
 .right{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.who{margin-top:18px}
-.who p{opacity:.8;margin:0 0 16px;max-width:60ch}
-.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;max-width:720px}
-.tile{border:0;border-radius:20px;background:rgba(255,255,255,.07);color:#fff;padding:18px 10px 14px;display:grid;justify-items:center;gap:8px;transition:transform .15s,background .15s}
-.tile:hover{background:rgba(255,255,255,.15);transform:translateY(-2px)}
-.tile .av{width:60px;height:60px;font-size:22px;box-shadow:0 0 0 4px rgba(255,255,255,.18)}
-.tile b{font-size:18px;font-family:"Red Hat Display",sans-serif}
-.tile small{font-size:13px;opacity:.7;min-height:1.2em}
-.tile .on{display:inline-flex;align-items:center;gap:5px}
-.tile .on::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--online)}
+.who{margin-top:14px}
+.who p{opacity:.8;margin:0;max-width:60ch}
 
 /* ---------- avatar e persone ---------- */
 .av{flex:none;width:30px;height:30px;border-radius:50%;background:var(--c,#8a93a6);color:#fff;display:inline-grid;place-items:center;font:700 12px "Red Hat Display",sans-serif;vertical-align:middle}
@@ -333,12 +323,13 @@ textarea.fi{padding:10px 12px;min-height:80px;resize:vertical;line-height:1.45}
 .fc .fact a.alt{flex:none;padding:0 12px;background:none;border:1px solid var(--line);color:var(--ink)}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media(max-width:900px){.cbg{grid-template-columns:minmax(0,1fr)}.cbg>.card{min-height:0}.cbt{height:clamp(300px,52vh,560px)}.cbgrid{max-height:none}}
-@media(max-width:760px){.add{grid-template-columns:minmax(0,1fr)}.meta3{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){.add{grid-template-columns:minmax(0,1fr)}.meta3{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
 @media(max-width:600px){
   .ov{padding:0;place-items:stretch}.dlg{max-height:100vh;border-radius:0}
   .l2{padding-left:6px}.dates{flex:1 1 100%;order:3}.dates input{flex:1;width:auto}.acts{margin-left:auto}
   #cbText{padding:16px 16px 18px 20px;font-size:16px}
   .cbt .cbh span{display:none}.cbt .cbh h2{flex:1}
+  .nav{gap:2px}.nav a{padding:8px 9px;font-size:14px}
   .cbgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .pchip{padding-right:10px}
   #list tbody tr.sr{padding-left:calc(14px + var(--d)*16px)}

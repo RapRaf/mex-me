@@ -1,5 +1,5 @@
 import type { Server, Socket } from 'socket.io';
-import { users } from './data';
+import { users, profileOfIp } from './data';
 import { getClientIp, ipName } from './access';
 
 /* Riferimento condiviso a Socket.IO e messaggi in broadcast. */
@@ -7,7 +7,7 @@ import { getClientIp, ipName } from './access';
 export interface SocketData {
     ip: string;
     ipName: string;
-    profile: string | null;     // profilo scelto in questa scheda ("Chi sei?")
+    profile: string | null;     // profilo legato all'IP (null = IP senza profilo)
     uploads: Set<string>;       // tempId degli upload Appunti in corso da questa scheda
 }
 export type AppSocket = Socket<any, any, any, SocketData>;
@@ -38,7 +38,7 @@ export function initSocketData(s: AppSocket) {
     const ip = getClientIp(s.request);
     s.data.ip = ip;
     s.data.ipName = ipName(ip);
-    s.data.profile = null;
+    s.data.profile = profileOfIp(ip);
     s.data.uploads = new Set();
 }
 

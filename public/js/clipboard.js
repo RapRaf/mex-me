@@ -101,7 +101,7 @@ function uploadOne(file) {
   ghosts.set(tempId, g); renderFiles();
   socket.emit('clip:upload_started', { tempId, name: file.name, size: file.size });
   let lastT = Date.now(), lastB = 0, lastEmit = 0;
-  const up = sendFile(file, { tempId, profile: app.profile }, (loaded, total) => {
+  const up = sendFile(file, { tempId }, (loaded, total) => {
     const now = Date.now(), dt = (now - lastT) / 1000;
     if (dt > 0.5) { g.speed = (loaded - lastB) / dt; lastB = loaded; lastT = now; }
     g.loaded = loaded; g.total = total; updateGhost(tempId);

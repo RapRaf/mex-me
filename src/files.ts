@@ -3,7 +3,7 @@ import path from 'path';
 import express, { type Request, type Response, type NextFunction } from 'express';
 import multer from 'multer';
 import { UPLOAD_DIR } from './config';
-import { attachments, clipboard, isProfile, type ClipFile } from './data';
+import { attachments, clipboard, profileOfIp, type ClipFile } from './data';
 import { addAttachment, newId, UserError } from './diario';
 import { getIo, upsert, whoIs, type SocketData } from './hub';
 import { getClientIp } from './access';
@@ -47,7 +47,7 @@ filesRouter.post('/upload', upload.single('file'), (req: Request, res: Response)
     if (!f) { res.status(400).json({ ok: false, error: 'Nessun file caricato.' }); return; }
     const body = (req.body || {}) as Record<string, string | undefined>;
     const io = getIo(), ip = getClientIp(req);
-    const profile = isProfile(body.profile) ? body.profile : null;
+    const profile = profileOfIp(ip);
     const meta = { id: f.filename, name: (f.originalname || 'file').slice(0, 200), size: f.size, contentType: typeOf(f.originalname || '') };
 
     // Allegato di un task

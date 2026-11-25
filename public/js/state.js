@@ -6,7 +6,7 @@ export const db = { users: {}, tasks: {}, comments: {}, attachments: {}, seen: {
 
 /** Stato dell'interfaccia di questa scheda. */
 export const app = {
-  profile: null,     // profilo scelto in questa scheda
+  profile: null,     // profilo di chi guarda (deciso dal server dall'IP)
   canWrite: false,   // false = sola lettura (fuori dal diario o vista admin)
   roSaved: null,     // canWrite salvato mentre un dialog è aperto in sola lettura
   curId: null,       // task aperto nel dialog

@@ -2,11 +2,11 @@
 
 Appunti condivisi e diario del team, in tempo reale.
 
-- **Appunti** (visibili a tutti, anche senza entrare): una lavagna di testo condivisa e i file caricati, con l'avanzamento degli upload visto da tutti e la lista di chi è connesso.
-- **Diario del team** (dopo aver scelto il profilo in "Chi sei?"):
+- **Appunti**: una lavagna di testo condivisa e i file caricati, con l'avanzamento degli upload visto da tutti e la lista di chi è connesso.
+- **Diario del team**, per chi si collega da un IP associato a un profilo:
   - **Home**: task e sottotask annidati, stati, date, assegnatari, allegati e note del team (una chat per task).
   - **Priorità**: kanban a 3 colonne con label e trascinamento.
-  - **Admin**: calendario e agenda in sola lettura.
+  - **Visualizzazione**: calendario e agenda in sola lettura.
   - **Appunti**: la stessa vista della pagina iniziale.
 
 Design e funzioni del diario vengono dalla repo dei grafici *2F_Slack*, riscritta e integrata qui.
@@ -23,7 +23,7 @@ npm run build && npm start   # produzione (pm2: ecosystem.config.cjs)
 | Variabile | Uso |
 |---|---|
 | `PORT`, `HOST` | Indirizzo di ascolto. Dietro nginx: `HOST=127.0.0.1` |
-| `KNOWN_IPS` | `{"ip":"nome"}`: solo questi IP possono accedere (HTTP e Socket.IO). Vuota = tutti |
+| `KNOWN_IPS` | `{"ip":"Nome"}`: solo questi IP possono accedere (HTTP e Socket.IO), e il nome è il profilo di chi si collega. Vuota = accesso libero, solo Appunti |
 | `DATA_DIR` | Cartella dei dati, default `./data` |
 | `REDIS_URL` | Solo per la migrazione una tantum da Redis |
 
@@ -33,7 +33,7 @@ Niente database: tutto sta in file JSON in `data/`, tenuti in memoria e riscritt
 
 ```
 data/
-├── users.json        profili (creati al primo avvio: Raffa, Giada, Ludo, Pab)
+├── users.json        profili (creati dai nomi di KNOWN_IPS)
 ├── tasks.json        task e sottotask (una tabella auto-referenziata: parentId, rootId, depth)
 ├── comments.json     note del team
 ├── attachments.json  allegati dei task
@@ -47,9 +47,11 @@ Per ripristinare un backup: fermare il server, copiare i file da `data/backups/<
 
 ## Profili e accesso
 
-- L'accesso è filtrato per IP (`KNOWN_IPS`, e `allow` in nginx).
-- Il profilo scelto in "Chi sei?" vale **per scheda**: due schede possono essere due persone, e "Esci" in una non tocca le altre. Una scheda nuova riprende l'ultimo profilo scelto.
-- Non ci sono password. Il server controlla le scritture: le note si eliminano solo dal proprio profilo, e la cancellazione dei task è a cascata.
+- **Il profilo lo decide il server dall'IP**, tramite `KNOWN_IPS`: chi si collega entra subito come la sua persona, senza scegliere né cambiare profilo. Un IP non in `KNOWN_IPS` riceve 403.
+- **Ogni nome di `KNOWN_IPS` è un profilo.** Più IP con lo stesso nome (es. PC e telefono) sono la stessa persona. Un nome si lega al profilo con lo stesso nome (o id); se non esiste, il profilo viene creato all'avvio. Aggiungere una persona = una riga nel `.env` + riavvio.
+- **Rinominare** in `KNOWN_IPS` un nome usato per creare un profilo, ma mai usato in task o note, fa sparire quel profilo al riavvio. Un profilo senza IP resta comunque assegnabile ai task.
+- **Dietro nginx** l'IP arriva in `X-Real-IP`, che l'app accetta solo da `127.0.0.1`: l'app deve ascoltare su `HOST=127.0.0.1`.
+- **Il server controlla le scritture:** le note si eliminano solo dal proprio profilo, e la cancellazione dei task è a cascata.
 
 ## File caricati
 
@@ -72,7 +74,9 @@ pm2 logs MexMe               # "Appunti importati da Redis: …"
   - `-- --force` sovrascrive appunti già presenti.
 - Dopo la migrazione Redis non serve più: si può togliere `REDIS_URL`.
 
-Nginx: applicare `deploy/mexme.conf` (`deploy/update-nginx.sh`). Contiene `client_max_body_size 0`: senza, nginx rifiuta gli upload sopra 1 MB.
+Nginx: la configurazione reale (`deploy/mexme.conf`, con IP e percorsi) è esclusa da git. Si crea da `deploy/mexme.conf.example` e si applica con `deploy/update-nginx.sh`. Deve contenere `client_max_body_size 0`: senza, nginx rifiuta gli upload sopra 1 MB.
+
+Nella repo non vanno mai IP, password o altri dati del server: stanno solo in `.env` e `deploy/mexme.conf`.
 
 ## Struttura
 
@@ -92,10 +96,10 @@ public/              client (JavaScript senza build, moduli ES)
 ├── index.html
 ├── css/app.css      palette "Lab poster", tema chiaro/scuro con light-dark()
 └── js/
-    ├── main.js      render complessivo, navigazione (#home #priorita #admin #admin-lista #appunti)
+    ├── main.js      render complessivo, navigazione (#home #priorita #visualizzazione #visualizzazione-agenda #appunti)
     ├── state.js     dati, indici, helper condivisi
     ├── net.js       socket, scritture ottimistiche, upload
-    ├── session.js   "Chi sei?", entra/esci per scheda
+    ├── session.js   profilo di chi guarda (deciso dal server)
     ├── clipboard.js Appunti e connessi
     ├── home.js  dialog.js  attach.js  chat.js  prio.js  admin.js
     └── util.js
@@ -107,4 +111,4 @@ public/              client (JavaScript senza build, moduli ES)
 - **Focus:** le viste si ridisegnano senza togliere il focus a chi sta scrivendo (`setVal`, chiavi strutturali). Il kanban non si ricostruisce durante un trascinamento.
 - **Scritture ottimistiche:** si vedono subito, e le patch dello stesso task si accodano e si uniscono. Se il server rifiuta una scrittura, il client richiede tutti i dati (`diario:sync`).
 - **Liste estendibili:** le label stanno in `LABELS` in `prio.js` (aggiungerne una = una riga) e i colori persona in `COLORS` in `util.js` (indice `users.c`).
-- **Storage del browser:** solo comodità, mai dati condivisi: filtri, blocchi compressi, profilo della scheda (`mx-*`).
+- **Storage del browser:** solo comodità, mai dati condivisi: filtri e blocchi compressi (`mx-*`).
