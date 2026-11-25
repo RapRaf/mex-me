@@ -5,6 +5,7 @@ Le modifiche, dalla più recente. Chi consegna una funzione aggiunge una riga so
 ## Non ancora pubblicato
 
 - Documentazione per chi lavora al progetto (`CLAUDE.md`, `docs/`) e test automatici (`npm test`).
+- Ambiente locale completo senza Redis: `npm run seed` (dati d'esempio) e `npm run persone` (più persone di prova sulla stessa macchina).
 
 ## 25/11/2026: profilo dall'IP, Visualizzazione
 

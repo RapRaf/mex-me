@@ -33,12 +33,16 @@ Le funzioni e lo stile del diario vengono da un prototipo dei grafici (la repo "
 
 ## 3. Avvio in locale (in breve)
 
+Non servono database né Redis: basta Node.js.
+
 ```bash
 npm install
 cp .env.example .env      # va bene così per lavorare in locale
+npm run seed              # (facoltativo) task, note e appunti d'esempio
 npm run dev               # avvia il server e lo riavvia a ogni modifica in src/
 # apri http://127.0.0.1:3003  → entri come profilo "Sviluppo"
-npm test                  # controlla di non aver rotto niente (43 verifiche automatiche)
+npm run persone           # (in un secondo terminale) persone di prova: :3011 Anna, :3012 Bruno, :3013 Carla
+npm test                  # controlla di non aver rotto niente (verifiche automatiche)
 ```
 
 Guida passo passo per chi parte da zero, esempi di modifiche e problemi comuni: **[docs/GUIDA.md](docs/GUIDA.md)**.
@@ -66,12 +70,15 @@ Guida passo passo per chi parte da zero, esempi di modifiche e problemi comuni: 
 │   ├── hub.ts              riferimento a Socket.IO, broadcast, lista dei connessi
 │   ├── realtime.ts         tutti i messaggi Socket.IO (cosa fa il server per ognuno)
 │   ├── migrate.ts          import una tantum della vecchia clipboard da Redis
-│   └── scripts/migrate-redis.ts   la stessa migrazione lanciata a mano
+│   └── scripts/
+│       ├── seed.ts         dati di prova in locale (npm run seed; rifiuta configurazioni non di sviluppo)
+│       └── migrate-redis.ts   la migrazione da Redis lanciata a mano
 ├── public/                 ← BROWSER (servito così com'è)
 │   ├── index.html          tutta la struttura della pagina (viste e dialog)
 │   ├── css/app.css         tutto lo stile
 │   └── js/                 moduli ES (vedi §7)
 ├── test/run.cjs            test automatici (npm test)
+├── dev/persone.cjs         persone di prova in locale (npm run persone): un ingresso per ogni IP finto 10.99.0.N
 ├── deploy/
 │   ├── mexme.conf.example  modello della configurazione nginx (quella vera NON è in git)
 │   └── update-nginx.sh     applica la configurazione nginx sul server
@@ -173,7 +180,7 @@ I vecchi `#admin` e `#admin-lista` vengono reindirizzati.
 
 - **Mai lavorare direttamente su `main`.** Crea un branch per ogni funzione: `git checkout -b funzione/nome-breve`.
 - Commit piccoli, con il messaggio in italiano che dice cosa cambia (es. "Aggiunge la stima in ore ai task").
-- Prima di ogni push: `npm test` deve dare **0 falliti**, più la prova a mano della checklist in [docs/GUIDA.md](docs/GUIDA.md).
+- Prima di ogni push: `npm test` deve dare **0 falliti**, più la prova a mano della checklist in [docs/GUIDA.md](docs/GUIDA.md), anche con più persone (`npm run persone`).
 - **Si pusha sul repository locale del team** (quello da cui hai clonato), **non su GitHub**. GitHub e il server di produzione li gestisce il responsabile del progetto, che rivede e integra.
 - Mai committare `.env`, `data/`, `deploy/mexme.conf`, `node_modules/`, `dist/`: sono già in `.gitignore`.
 - Aggiorna la documentazione se cambi il comportamento:

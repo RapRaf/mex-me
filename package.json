@@ -8,6 +8,8 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
+    "persone": "node dev/persone.cjs",
+    "seed": "tsx src/scripts/seed.ts",
     "build": "tsc",
     "start": "node dist/server.js",
     "check": "tsc --noEmit",

@@ -18,18 +18,25 @@ Su Windows usa il terminale integrato di VS Code o "Git Bash": i comandi di ques
 
 ## 2. Primo avvio
 
+Non servono database, Redis o altri programmi: solo Node.js. I dati in locale sono file nella cartella `data/` del progetto.
+
 ```bash
 git clone <indirizzo del repository locale del team>   # te lo dà il responsabile
 cd <cartella del progetto>
 npm install                 # scarica le librerie (solo la prima volta o se cambia package.json)
 cp .env.example .env        # crea la tua configurazione locale (su Windows: copy .env.example .env)
-npm run dev                 # avvia il server
+npm run seed                # facoltativo ma consigliato: task, sottotask, note e appunti d'esempio
+npm run dev                 # avvia l'app
 ```
 
 Apri **http://127.0.0.1:3003**: entri come profilo **"Sviluppo"** e vedi Home, Priorità, Visualizzazione e Appunti.
-I dati che crei finiscono in `data/` sul tuo computer: sono solo tuoi, non quelli veri del team.
+I dati che crei restano in `data/` sul tuo computer: sono solo tuoi, non quelli veri del team.
 
-Per ricominciare da zero basta fermare il server (`Ctrl+C`), cancellare la cartella `data/` e riavviarlo.
+**Ripartire da zero:**
+- fermare l'app (`Ctrl+C`), poi `npm run seed -- --force` ricrea i dati d'esempio;
+- oppure cancellare la cartella `data/` per partire vuoti.
+
+`npm run seed` funziona solo ad app ferma e solo con una configurazione di sviluppo (quella di `.env.example`): non può toccare i dati veri.
 
 ### Cosa succede quando modifichi un file
 
@@ -44,23 +51,33 @@ Premi **F12** per aprire gli strumenti per sviluppatori.
 
 ## 3. Provare con più persone
 
-Ogni IP è una persona. In locale sei sempre "Sviluppo", ma puoi simulare altre persone in due modi.
+In produzione ogni persona è riconosciuta dal suo IP. In locale arrivi sempre da `127.0.0.1` ("Sviluppo"); per simulare altre persone c'è **`npm run persone`**.
 
-**A. Da un altro dispositivo (telefono, altro PC sulla stessa rete)**
-1. Nel `.env` metti `HOST=0.0.0.0`, così l'app è raggiungibile dalla rete.
-2. Aggiungi l'IP del dispositivo in `KNOWN_IPS`, per esempio `{"127.0.0.1":"Sviluppo","::1":"Sviluppo","192.168.1.50":"Prova"}`.
-3. Riavvia (`Ctrl+C`, poi `npm run dev`).
-4. Dal dispositivo apri `http://<IP del tuo PC>:3003`.
+In un **secondo terminale**, con l'app già avviata:
 
-L'IP che il server vede è scritto nel terminale a ogni connessione ("Client connesso … IP: …"); chi non è in `KNOWN_IPS` riceve 403.
+```bash
+npm run persone
+```
 
-**B. Dallo stesso PC, con un'estensione del browser**
-Il server, come fa con nginx in produzione, si fida dell'header `X-Real-IP` quando la richiesta arriva da `127.0.0.1`.
-1. Installa un'estensione che aggiunge header alle richieste (es. "ModHeader").
-2. Imposta `X-Real-IP: 10.0.0.2`.
-3. In `KNOWN_IPS` aggiungi `"10.0.0.2":"Prova"`.
+```
+  http://127.0.0.1:3011  →  Anna   (IP finto 10.99.0.1)
+  http://127.0.0.1:3012  →  Bruno  (IP finto 10.99.0.2)
+  http://127.0.0.1:3013  →  Carla  (IP finto 10.99.0.3)
+  http://127.0.0.1:3003  →  te stesso (Sviluppo)
+```
 
-Usa un profilo del browser diverso, così l'altra finestra resta "Sviluppo".
+Apri gli indirizzi in finestre diverse: ognuna è una persona diversa, con il suo colore, i suoi task ("Solo i miei"), le sue note lette.
+Così si prova tutto il tempo reale:
+- un task creato da Anna compare subito da Bruno;
+- la nota di Bruno fa comparire il badge magenta ad Anna;
+- il testo degli appunti e gli upload si vedono in tutte le finestre.
+
+Come funziona: `dev/persone.cjs` fa quello che fa nginx in produzione, cioè inoltra all'app aggiungendo l'header `X-Real-IP` con un IP finto. Per aggiungere una persona basta una voce `"10.99.0.4":"Dario"` in `KNOWN_IPS` nel `.env` (porta 3014), poi riavvia app e `npm run persone`.
+
+**Da un telefono vero sulla stessa rete** (per provare il touch):
+1. Nel `.env` metti `HOST=0.0.0.0`.
+2. Aggiungi l'IP del telefono in `KNOWN_IPS`: lo leggi nel terminale dell'app al primo tentativo, nella riga "Accesso HTTP negato per IP non autorizzato: …".
+3. Riavvia e dal telefono apri `http://<IP del tuo PC>:3003`.
 
 ## 4. Dove mettere le mani
 
@@ -182,9 +199,11 @@ Il risultato arriva a tutte le pagine con `diario:upsert`, che aggiorna i dati e
 **Automatico**
 - [ ] `npm test` → `0 falliti` (controlla anche che il TypeScript compili)
 
+**Prepara** (ad app ferma): `npm run seed -- --force`, poi `npm run dev` e, in un altro terminale, `npm run persone`. Tieni aperte almeno due finestre: http://127.0.0.1:3003 (Sviluppo) e http://127.0.0.1:3011 (Anna).
+
 **A mano** (solo le parti toccate, ma meglio un giro veloce di tutto)
 - [ ] Appunti:
-  - [ ] il testo scritto in una finestra compare nell'altra;
+  - [ ] il testo scritto da Sviluppo compare da Anna;
   - [ ] l'upload mostra la percentuale;
   - [ ] Scarica ed elimina funzionano;
   - [ ] trascinando un file sulla pagina parte l'upload;
@@ -243,3 +262,9 @@ git push -u origin funzione/stima-ore     # sul repository locale del team, NON 
 | Una modifica torna indietro da sola con l'avviso "Dati non validi" | Il server ha rifiutato il campo: manca (o è sbagliata) la sua validazione in `FIELDS` di `src/diario.ts` |
 | `npm test` fallisce su "Sintassi di public/js" | C'è un errore di scrittura in quel file: il messaggio dice riga e colonna |
 | `npm install` avvisa "EBADENGINE" | La tua versione di Node è troppo vecchia: installa la 22 o superiore |
+| `npm run persone` dice "Nessun IP finto 10.99.0.N" | Il tuo `.env` è vecchio: copia la riga `KNOWN_IPS` da `.env.example` e riavvia l'app |
+| `npm run persone` dice "Porta 30xx non disponibile" | È già acceso (un altro terminale) o la porta è usata da altro |
+| Su `:3011` compare "L'app non risponde" | L'app non è avviata: `npm run dev` nel primo terminale |
+| `npm run seed` dice "L'app è avviata" | Ferma l'app (`Ctrl+C`), lancia il seed, poi riavviala |
+| `npm run seed` dice "funziona solo in sviluppo" | Nel tuo `.env` ci sono IP veri: usa la riga `KNOWN_IPS` di `.env.example` |
+| Mi chiede Redis / errori su Redis | Non serve: lascia `REDIS_URL` commentata nel `.env` (serve solo sul server, per una vecchia migrazione) |

@@ -23,6 +23,8 @@ Come gira davvero MexMe e come si aggiorna. Gli indirizzi, i percorsi e gli IP v
                                      data/  (file JSON + file caricati + backup)
 ```
 
+In locale `dev/persone.cjs` (`npm run persone`) fa la parte di nginx per simulare più persone; in produzione non si usa.
+
 L'IP vero del browser è un controllo **doppio**:
 - nginx (`allow`) blocca chiunque non sia del team prima ancora di arrivare all'app;
 - l'app (`KNOWN_IPS`) lo blocca di nuovo e decide il profilo.

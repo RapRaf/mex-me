@@ -14,16 +14,22 @@ Non c'è login: ogni persona è riconosciuta dall'indirizzo IP (`KNOWN_IPS` nel 
 
 Serve **Node.js 22 o superiore**.
 
+Non servono database né Redis.
+
 ```bash
 npm install
 cp .env.example .env     # va bene così in locale
+npm run seed             # dati d'esempio (facoltativo)
 npm run dev              # http://127.0.0.1:3003
+npm run persone          # altro terminale: persone di prova su :3011, :3012, :3013
 npm test                 # verifiche automatiche
 ```
 
 | Comando | Cosa fa |
 |---|---|
 | `npm run dev` | avvia in sviluppo e riavvia a ogni modifica del server |
+| `npm run seed` | dati d'esempio in locale (`-- --force` per ricrearli); rifiuta configurazioni non di sviluppo |
+| `npm run persone` | persone di prova in locale: un indirizzo per ogni IP finto 10.99.0.N di `KNOWN_IPS` |
 | `npm test` | controlla TypeScript, la sintassi dei moduli del browser e le funzioni principali (su un server di prova) |
 | `npm run build` / `npm start` | compila e avvia in produzione (lì lo avvia pm2) |
 | `npm run migrate:redis` | import manuale della vecchia clipboard da Redis |
