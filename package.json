@@ -1,16 +1,17 @@
 {
   "name": "copy-paste",
-  "version": "1.0.0",
-  "description": "",
+  "version": "2.0.0",
+  "description": "MexMe: appunti condivisi e diario del team",
   "license": "ISC",
   "author": "",
   "type": "commonjs",
-  "main": "server.js",
+  "main": "dist/server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "tsx watch server.ts",
-    "build": "tsc && cp -R public dist/",
-    "start": "node dist/server.js"
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "check": "tsc --noEmit",
+    "migrate:redis": "tsx src/scripts/migrate-redis.ts"
   },
   "dependencies": {
     "dotenv": "^17.4.2",

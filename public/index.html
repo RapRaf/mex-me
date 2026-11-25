@@ -1,735 +1,164 @@
 <!DOCTYPE html>
 <html lang="it">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MexMe - Appunti</title>
-    <style>
-        /*--- TEMA GENERALE --- */
-        body,
-        html {
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            height: 100dvh;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            display: flex;
-            flex-direction: row;
-            overflow: hidden;
-            box-sizing: border-box;
-            width: 100%;
-        }
-
-        /*--- SIDEBAR UTENTI ATTIVI --- */
-        .sidebar {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
-            display: flex;
-            flex-direction: column;
-            padding: 25px 20px;
-            box-sizing: border-box;
-            overflow-y: auto;
-            flex-shrink: 0;
-        }
-
-        .sidebar-header {
-            margin-bottom: 20px;
-        }
-
-        .sidebar-title {
-            font-weight: bold;
-            font-size: 16px;
-            color: #2c3e50;
-            margin: 0 0 5px 0;
-        }
-
-        .clients-count {
-            font-size: 12px;
-            color: #7f8c8d;
-        }
-
-        .clients-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .client-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 14px;
-            color: #34495e;
-            padding: 10px 12px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            border: 1px solid #e1e8ed;
-            transition: background 0.2s;
-        }
-
-        .client-item:hover {
-            background: #f1f5f9;
-        }
-
-        .status-dot {
-            width: 10px;
-            height: 10px;
-            background: #2ecc71;
-            border-radius: 50%;
-            box-shadow: 0 0 5px rgba(46, 204, 113, 0.4);
-        }
-
-        /*--- CONTENITORE PRINCIPALE --- */
-        .main-content {
-            position: relative;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            min-width: 0;
-            width: 100%;
-        }
-
-        /*--- STILE LAVAGNETTA (TEXTAREA) --- */
-        .text-section {
-            flex: 2;
-            display: flex;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
-            overflow: hidden;
-            position: relative;
-        }
-
-        .text-section::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 6px;
-            background-color: #3498db;
-        }
-
-        textarea {
-            width: 100%;
-            height: 100%;
-            padding: 30px 40px;
-            font-size: 18px;
-            border: none;
-            outline: none;
-            resize: none;
-            box-sizing: border-box;
-            background: transparent;
-            color: #2c3e50;
-            line-height: 1.6;
-        }
-
-        textarea::placeholder {
-            color: #bdc3c7;
-            font-style: italic;
-        }
-
-        /*--- TOOLBAR MODERNA --- */
-        .toolbar {
-            background: white;
-            border-radius: 12px;
-            padding: 12px 25px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
-            flex-shrink: 0;
-        }
-
-        .toolbar-title {
-            font-weight: 600;
-            color: #7f8c8d;
-            font-size: 14px;
-        }
-
-        .upload-btn {
-            background-color: #3498db;
-            color: white;
-            border: none;
-            padding: 10px 24px;
-            font-size: 14px;
-            font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 6px rgba(52, 152, 219, 0.2);
-        }
-
-        .upload-btn:hover {
-            background-color: #2980b9;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(52, 152, 219, 0.3);
-        }
-
-        .upload-btn:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 4px rgba(52, 152, 219, 0.2);
-        }
-
-        /*--- SEZIONE FILE (DRAG & DROP) --- */
-        .files-section {
-            flex: 1;
-            position: relative;
-            background-color: #ffffff;
-            background-image: radial-gradient(#e2e8f0 2px, transparent 2px);
-            background-size: 20px 20px;
-            border-radius: 16px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
-            overflow: hidden;
-        }
-
-        .drop-placeholder {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            right: 20px;
-            bottom: 20px;
-            border: 2px dashed #cbd5e1;
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.85);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            pointer-events: none;
-            z-index: 1;
-            transition: all 0.3s ease;
-        }
-
-        .drop-placeholder .icon {
-            font-size: 48px;
-            margin-bottom: 12px;
-            opacity: 0.7;
-            transition: all 0.3s ease;
-        }
-
-        .drop-placeholder .text {
-            font-size: 18px;
-            font-weight: 600;
-            color: #718096;
-            text-align: center;
-        }
-
-        .drop-placeholder .subtext {
-            font-size: 13px;
-            color: #a0aec0;
-            margin-top: 6px;
-            text-align: center;
-        }
-
-        #files-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            padding: 45px;
-            overflow-y: auto;
-            z-index: 2;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            align-content: flex-start;
-        }
-
-        .files-section.drag-over .drop-placeholder {
-            border-color: #3498db;
-            background: rgba(241, 248, 255, 0.95);
-            z-index: 10;
-            backdrop-filter: blur(2px);
-        }
-
-        .files-section.drag-over .drop-placeholder .icon {
-            transform: scale(1.1) translateY(-5px);
-            opacity: 1;
-        }
-
-        .files-section.drag-over .drop-placeholder .text {
-            color: #3498db;
-        }
-
-        /*--- CARTE DEI FILE --- */
-        .file-card {
-            background: #f8f9fa;
-            border-radius: 12px;
-            border: 1px solid #e1e8ed;
-            width: 130px;
-            height: 140px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
-            text-align: center;
-            text-decoration: none;
-            color: #333;
-            transition: all 0.2s ease;
-        }
-
-        .file-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
-            border-color: #d1d8e0;
-        }
-
-        .file-card .icon {
-            font-size: 42px;
-            margin-bottom: 8px;
-        }
-
-        .file-card .name {
-            font-size: 11px;
-            font-weight: 500;
-            color: #4a5568;
-            word-break: break-all;
-            padding: 0 8px;
-            display: -webkit-box;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .delete-btn {
-            position: absolute;
-            top: -10px;
-            right: -10px;
-            background: #e74c3c;
-            color: white;
-            border-radius: 50%;
-            width: 26px;
-            height: 26px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 14px;
-            border: 3px solid white;
-            z-index: 10;
-            transition: background 0.2s, transform 0.2s;
-        }
-
-        .delete-btn:hover {
-            background: #c0392b;
-            transform: scale(1.1);
-        }
-
-        .file-card.uploading {
-            background: #edf2f7;
-            border-color: #cbd5e1;
-            pointer-events: none;
-        }
-
-        .file-card.uploading .icon,
-        .file-card.uploading .name {
-            opacity: 0.2;
-        }
-
-        .upload-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: #2c3e50;
-            border-radius: 12px;
-        }
-
-        .animated-arrow {
-            font-size: 24px;
-            animation: uploadBounce 1s infinite ease-in-out;
-            margin-bottom: 5px;
-            color: #3498db;
-        }
-
-        @keyframes uploadBounce {
-
-            0%,
-            100% {
-                transform: translateY(3px);
-            }
-
-            50% {
-                transform: translateY(-3px);
-            }
-        }
-
-        .stats {
-            font-size: 10px;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 8px;
-            border-radius: 8px;
-            width: 85%;
-            box-sizing: border-box;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-        }
-
-        .stats .percent {
-            font-size: 15px;
-            font-weight: 800;
-            color: #3498db;
-        }
-
-        .stats .transfer {
-            color: #718096;
-            font-size: 9px;
-        }
-
-        .stats .speed {
-            color: #2d3748;
-            font-weight: 600;
-        }
-
-        /*
-        =========================================================
-        MEDIA QUERIES (RESPONSIVE DESIGN PER MOBILE)
-        =========================================================
-        */
-        @media (max-width: 768px) {
-
-            body,
-            html {
-                flex-direction: column;
-                padding: 3px;
-            }
-
-            .sidebar {
-                width: 100%;
-                height: auto;
-                padding: 15px;
-                border-radius: 12px;
-            }
-
-            .sidebar-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 10px;
-            }
-
-            .sidebar-title {
-                margin: 0;
-            }
-
-            .clients-list {
-                flex-direction: row;
-                overflow-x: auto;
-                padding-bottom: 5px;
-                gap: 8px;
-            }
-
-            .client-item {
-                white-space: nowrap;
-                padding: 6px 10px;
-            }
-
-            textarea {
-                padding: 20px 25px;
-                font-size: 16px;
-            }
-
-            .toolbar {
-                padding: 10px 15px;
-                border-radius: 10px;
-            }
-
-            .toolbar-title {
-                display: none;
-            }
-
-            .upload-btn {
-                width: 100%;
-                justify-content: center;
-                padding: 12px;
-            }
-
-            #files-container {
-                padding: 15px;
-                justify-content: center;
-                gap: 15px;
-            }
-
-            .drop-placeholder {
-                display: none;
-            }
-
-            .file-card {
-                width: 100px;
-                height: 110px;
-            }
-
-            .file-card .icon {
-                font-size: 32px;
-            }
-
-            .delete-btn {
-                width: 22px;
-                height: 22px;
-                font-size: 12px;
-                top: -8px;
-                right: -8px;
-            }
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MexMe</title>
+<meta name="theme-color" content="#0b1f4b">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230b1f4b'/%3E%3Cpath d='M10 9h12v16H10z' fill='none' stroke='%23fff' stroke-width='2.4' stroke-linejoin='round'/%3E%3Cpath d='M13 6h6v5h-6z' fill='%23e0115f'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@500;700&family=Red+Hat+Text:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/app.css">
 </head>
-
-<body>
-    <div class="sidebar">
-        <div class="sidebar-header">
-            <h2 class="sidebar-title">Utenti Connessi</h2>
-            <div class="clients-count" id="clients-count">0 attivi</div>
-        </div>
-        <ul class="clients-list" id="clients-list">
-        </ul>
+<body class="anon">
+<header class="band">
+  <div class="in">
+    <div class="top">
+      <div><div class="brand">MexMe</div><h1 id="hT">Chi sei?</h1></div>
+      <div class="right">
+        <nav class="nav" id="nav" aria-label="Sezioni" hidden><a href="#home" id="nHome">Home</a><a href="#priorita" id="nPrio">Priorità</a><a href="#admin" id="nAdmin">Admin</a><a href="#appunti" id="nClip">Appunti</a></nav>
+        <div class="uchip" id="uchip" hidden></div>
+      </div>
     </div>
-
-    <div class="main-content">
-        <div class="text-section">
-            <textarea id="shared-textarea"
-                placeholder="Inizia a scrivere... Il testo verrà condiviso istantaneamente."></textarea>
-        </div>
-        <div class="toolbar">
-            <span class="toolbar-title">MexMe</span>
-            <input type="file" id="file-input" style="display: none;">
-            <button class="upload-btn" onclick="document.getElementById('file-input').click()">
-                <span class="icon">📤</span> Carica
-            </button>
-        </div>
-        <div class="files-section">
-            <div class="drop-placeholder">
-                <div class="icon">📥</div>
-                <div class="text">Trascina i tuoi file qui</div>
-                <div class="subtext">oppure usa il pulsante in alto per sfogliare</div>
-            </div>
-            <div id="files-container"></div>
-        </div>
+    <div class="who" id="who">
+      <p>Scegli il tuo profilo per entrare nel diario del team: task, priorità e calendario. Gli appunti qui sotto sono condivisi con tutti, anche senza entrare.</p>
+      <div class="tiles" id="tiles"></div>
     </div>
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-        // Safeguard for the preview environment
-        const socket = typeof io !== 'undefined' ? io() : { on: () => { }, emit: () => { } };
+    <form class="add" id="add" autocomplete="off" hidden>
+      <input id="aT" maxlength="200" placeholder="Scrivi un task e premi Invio…" aria-label="Titolo del nuovo task">
+      <select id="aP" aria-label="Dentro quale task"></select>
+      <button id="aB">Aggiungi task</button>
+    </form>
+    <p class="hint" id="aH" hidden>Lascia il menu su “Nuovo task” per crearne uno nuovo, oppure scegli un task aperto per aggiungere un sottotask.</p>
+  </div>
+</header>
+<div id="note" class="note" hidden></div>
 
-        const textarea = document.getElementById('shared-textarea');
-        const fileInput = document.getElementById('file-input');
-        const filesContainer = document.getElementById('files-container');
+<!-- Appunti: lavagna di testo e file condivisi in tempo reale -->
+<main class="wrap" id="clip">
+  <div class="bar">
+    <div class="pres" id="pres" aria-label="Connessi ora"></div>
+    <span class="save" id="cbSave" aria-live="polite"></span>
+  </div>
+  <div class="cbg">
+    <section class="card cbt" aria-labelledby="cbTH">
+      <div class="cbh"><h2 id="cbTH">Lavagna</h2><span>Condivisa in tempo reale con chi è connesso</span><button class="btn" id="cbCopy" type="button">Copia tutto</button></div>
+      <textarea id="cbText" spellcheck="false" placeholder="Inizia a scrivere… Il testo verrà condiviso istantaneamente." aria-label="Testo condiviso"></textarea>
+    </section>
+    <section class="card cbf" id="cbDrop" aria-labelledby="cbFH">
+      <div class="cbh"><h2 id="cbFH">File</h2><span id="cbCount"></span><button class="btn pri" id="cbUp" type="button"></button></div>
+      <div class="cbgrid" id="cbFiles"></div>
+      <div class="cbover" aria-hidden="true">Rilascia per caricare</div>
+    </section>
+  </div>
+</main>
+<input type="file" id="cbIn" multiple hidden>
 
-        // Elementi della sidebar
-        const clientsList = document.getElementById('clients-list');
-        const clientsCount = document.getElementById('clients-count');
+<main class="wrap" id="home" hidden>
+  <div class="bar">
+    <div class="chips"><div class="chips" id="chips" role="group" aria-label="Filtra per stato"></div><button class="mine" id="mineB" aria-pressed="false"></button></div>
+    <span class="save" id="save" aria-live="polite"></span>
+  </div>
+  <div class="card" id="list"></div>
+</main>
 
-        // --- GESTIONE UTENTI CONNESSI (ID + IP) ---
-        socket.on('clients_update', (clientsData) => {
-            clientsList.innerHTML = ''; // Pulisce la lista
+<main class="wrap" id="prio" hidden>
+  <div class="bar">
+    <div class="chips" id="pChips" role="group" aria-label="Filtra per label"></div>
+    <span class="save" id="pSave" aria-live="polite"></span>
+  </div>
+  <div class="kb" id="board"></div>
+</main>
 
-            const count = clientsData.length;
-            clientsCount.textContent = `${count} ${count === 1 ? 'attivo' : 'attivi'}`;
+<main class="wrap" id="admin" hidden>
+  <div class="bar">
+    <nav class="tabs" aria-label="Viste admin"><a href="#admin" id="avG">Calendario</a><a href="#admin-lista" id="avL">Agenda</a></nav>
+    <div class="afil">
+      <select class="fsel" id="fU" aria-label="Persona"></select>
+      <select class="fsel" id="fS" aria-label="Stato"><option value="">Tutti gli stati</option><option value="open">Aperti</option><option value="doing">In corso</option><option value="todo">Da fare</option><option value="done">Fatti</option><option value="late">In ritardo</option></select>
+      <select class="fsel" id="fL" aria-label="Livello"><option value="">Task e sottotask</option><option value="root">Solo task principali</option></select>
+      <input class="fsel" id="fQ" type="search" placeholder="Cerca…" aria-label="Cerca">
+    </div>
+  </div>
+  <div class="kpis" id="kpis"></div>
+  <section id="aCal">
+    <div class="calbar">
+      <button class="sq" id="cPrev" aria-label="Mese precedente">‹</button>
+      <h2 id="cMonth"></h2>
+      <button class="sq" id="cNext" aria-label="Mese successivo">›</button>
+      <button class="btn" id="cToday">Oggi</button>
+      <label class="onlyk" id="onlyKW"><input type="checkbox" id="onlyK"> Solo inizi e fine</label>
+      <span class="cnote" id="cNote"></span>
+    </div>
+    <div id="aGrid"></div>
+    <div id="aDay"></div>
+    <div id="aList"></div>
+  </section>
+</main>
 
-            clientsData.forEach(client => {
-                const li = document.createElement('li');
-                li.className = 'client-item';
+<!-- Dialog task -->
+<div class="ov" id="ov" hidden>
+  <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dT" id="dlg">
+    <div class="dh" id="dh">
+      <textarea class="dTitle" id="dT" rows="1" maxlength="200" aria-label="Titolo del task"></textarea>
+      <button class="x" id="dX" aria-label="Chiudi">×</button>
+    </div>
+    <div class="db">
+      <div class="meta3">
+        <label class="f">Stato<select class="fi" id="dS"></select></label>
+        <label class="f">Assegnato a<select class="fi" id="dU"></select></label>
+        <label class="f">Inizio lavorazione<input class="fi" type="date" id="dA"></label>
+        <label class="f">Fine lavorazione<input class="fi" type="date" id="dZ"></label>
+      </div>
+      <div class="atts" id="dAtt"></div>
+      <label class="f">Note<textarea class="fi" id="dN" maxlength="5000" placeholder="Dettagli, link, cosa serve…"></textarea></label>
+      <div>
+        <div class="sh"><h3>Sottotask</h3><span id="dC"></span></div>
+        <ul class="tree" id="tree" style="margin-top:10px"></ul>
+        <form class="sadd" id="sAdd" autocomplete="off">
+          <div class="into" id="into"></div>
+          <input class="fi" id="sT" maxlength="200" placeholder="Nuovo sottotask…" aria-label="Titolo del sottotask">
+          <button class="btn pri">Aggiungi</button>
+        </form>
+      </div>
+      <div class="df"><span id="dI"></span><button class="del" id="dDel">Elimina task</button></div>
+    </div>
+  </div>
+</div>
 
-                const isMe = socket.id === client.id;
+<!-- Dialog allegati -->
+<div class="ov ov2" id="ov2" hidden>
+  <div class="dlg fdlg" role="dialog" aria-modal="true" aria-labelledby="fT">
+    <div class="dh" style="box-shadow:none;align-items:center">
+      <div style="flex:1"><div style="font-size:14px;color:var(--mute)">Allegati</div><h2 id="fT" style="font-size:22px;margin-top:2px"></h2></div>
+      <button class="x" id="fX" aria-label="Chiudi allegati">×</button>
+    </div>
+    <div class="db">
+      <div class="fgrid" id="fGrid"></div>
+      <div class="drop" id="drop">Trascina qui i file oppure <button class="btn pri" id="fUp" type="button" style="margin-left:6px">Carica file</button>
+        <div style="font-size:13px;margin-top:8px">Qualsiasi tipo di file. Immagini, video e PDF si vedono in anteprima.</div></div>
+    </div>
+  </div>
+</div>
+<input type="file" id="fileIn" multiple hidden>
 
-                // client.name ora arriva dal server (es. "Raffa" oppure l'IP crudo)
-                const displayName = isMe ? `Tu (${client.name})` : client.name;
+<!-- Dialog note del team -->
+<div class="ov ov3" id="ov3" hidden>
+  <div class="dlg cdlg" role="dialog" aria-modal="true" aria-labelledby="cT">
+    <div class="dh" style="box-shadow:none;align-items:center">
+      <div style="flex:1"><div style="font-size:14px;color:var(--mute)" id="cSub">Note del team</div><h2 id="cT" style="font-size:22px;margin-top:2px"></h2></div>
+      <button class="x" id="cX" aria-label="Chiudi note">×</button>
+    </div>
+    <div class="clog" id="cLog"></div>
+    <form class="cform" id="cForm" autocomplete="off">
+      <textarea class="fi" id="cIn" rows="1" maxlength="2000" placeholder="Scrivi una nota per il team…" aria-label="Nuova nota"></textarea>
+      <button class="btn pri" id="cSend">Invia</button>
+    </form>
+  </div>
+</div>
 
-                li.innerHTML = `
-                    <div class="status-dot"></div>
-                    <span style="${isMe ? 'font-weight: bold;' : ''}">${displayName}</span>
-                `;
-
-                clientsList.appendChild(li);
-            });
-        });
-
-
-
-        // --- FUNZIONI DI UTILITA' ---
-        function formatBytes(bytes) {
-            if (bytes === 0) return '0 B';
-            const k = 1024, sizes = ['B', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-        }
-
-        function getIcon(filename) {
-            if (filename.match(/\.(jpg|jpeg|png|gif)$/i)) return '🖼️';
-            if (filename.match(/\.(mp4|mov|avi)$/i)) return '🎥';
-            if (filename.match(/\.(zip|rar)$/i)) return '🗜️';
-            return '📄';
-        }
-
-        // --- GESTIONE TESTO ---
-        socket.on('init_text', (text) => textarea.value = text);
-        socket.on('text_update', (text) => textarea.value = text);
-        textarea.addEventListener('input', (e) => socket.emit('text_change', e.target.value));
-
-        // --- GESTIONE FILE DOM ---
-        socket.on('init_files', (files) => {
-            filesContainer.innerHTML = '';
-            files.forEach(renderFileCard);
-        });
-
-        function createGhostCard(data) {
-            const card = document.createElement('div');
-            card.className = 'file-card uploading';
-            card.id = `ghost-${data.tempId}`;
-            card.innerHTML = `
-                <div class="icon">${getIcon(data.name)}</div>
-                <div class="name">${data.name}</div>
-                <div class="upload-overlay">
-                    <div class="animated-arrow">⬆️</div>
-                    <div class="stats">
-                        <div class="percent" id="percent-${data.tempId}">0%</div>
-                        <div class="transfer" id="transfer-${data.tempId}">0 B / ${formatBytes(data.size)}</div>
-                        <div class="speed" id="speed-${data.tempId}">Calcolo...</div>
-                    </div>
-                </div>
-            `;
-            filesContainer.prepend(card);
-        }
-
-        socket.on('upload_started', createGhostCard);
-        socket.on('upload_progress', (data) => {
-            const percentEl = document.getElementById(`percent-${data.tempId}`);
-            const transferEl = document.getElementById(`transfer-${data.tempId}`);
-            const speedEl = document.getElementById(`speed-${data.tempId}`);
-            if (percentEl) percentEl.textContent = `${data.percent}%`;
-            if (transferEl) transferEl.textContent = `${data.loadedText} / ${data.totalText}`;
-            if (speedEl) speedEl.textContent = data.speed;
-        });
-
-        socket.on('new_file', (fileInfo) => {
-            const ghost = document.getElementById(`ghost-${fileInfo.tempId}`);
-            if (ghost) ghost.remove();
-            renderFileCard(fileInfo);
-        });
-
-        socket.on('file_deleted', (fileId) => {
-            const card = document.getElementById(`file-${fileId}`);
-            if (card) card.remove();
-        });
-
-        // --- CARICAMENTO FILE (AJAX) ---
-        function uploadFile(file) {
-            if (!file) return;
-            const tempId = 'temp_' + Date.now();
-            const startData = { tempId, name: file.name, size: file.size };
-            createGhostCard(startData);
-            socket.emit('upload_started', startData);
-
-            const formData = new FormData();
-            formData.append('tempId', tempId);
-            formData.append('file', file);
-
-            const xhr = new XMLHttpRequest();
-            let lastLoadedBytes = 0;
-            let lastTime = Date.now();
-            let currentSpeedText = "Calcolo...";
-
-            xhr.upload.onprogress = (event) => {
-                if (event.lengthComputable) {
-                    const now = Date.now();
-                    const timeDiff = (now - lastTime) / 1000;
-                    if (timeDiff > 0.5) {
-                        const bytesDiff = event.loaded - lastLoadedBytes;
-                        const speedBps = bytesDiff / timeDiff;
-                        currentSpeedText = formatBytes(speedBps) + '/s';
-                        lastLoadedBytes = event.loaded;
-                        lastTime = now;
-                    }
-                    const percent = Math.round((event.loaded / event.total) * 100);
-                    const loadedText = formatBytes(event.loaded);
-                    const totalText = formatBytes(event.total);
-
-                    const percentEl = document.getElementById(`percent-${tempId}`);
-                    const transferEl = document.getElementById(`transfer-${tempId}`);
-                    const speedEl = document.getElementById(`speed-${tempId}`);
-
-                    if (percentEl) percentEl.textContent = `${percent}%`;
-                    if (transferEl) transferEl.textContent = `${loadedText} / ${totalText}`;
-                    if (speedEl) speedEl.textContent = currentSpeedText;
-
-                    socket.emit('upload_progress', {
-                        tempId, percent, loadedText, totalText, speed: currentSpeedText
-                    });
-                }
-            };
-
-            xhr.onload = () => { fileInput.value = ''; };
-            xhr.open('POST', '/upload', true);
-            xhr.send(formData);
-        }
-
-        fileInput.addEventListener('change', (e) => uploadFile(e.target.files[0]));
-
-        // --- DRAG & DROP ---
-        const dropZone = document.querySelector('.files-section');
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            document.body.addEventListener(eventName, preventDefaults, false);
-        });
-        function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
-
-        ['dragenter', 'dragover'].forEach(eventName => {
-            dropZone.addEventListener(eventName, () => dropZone.classList.add('drag-over'), false);
-        });
-        ['dragleave', 'drop'].forEach(eventName => {
-            dropZone.addEventListener(eventName, () => dropZone.classList.remove('drag-over'), false);
-        });
-        dropZone.addEventListener('drop', (e) => {
-            const files = e.dataTransfer.files;
-            if (files && files.length > 0) uploadFile(files[0]);
-        });
-
-        // --- RENDERING FILE CARD ---
-        function renderFileCard(fileInfo) {
-            const card = document.createElement('div');
-            card.className = 'file-card';
-            card.id = `file-${fileInfo.id}`;
-            const link = document.createElement('a');
-            link.href = fileInfo.url;
-            link.download = fileInfo.name;
-            link.style.textDecoration = 'none'; link.style.color = 'inherit';
-            link.innerHTML = `
-                <div class="icon">${getIcon(fileInfo.name)}</div>
-                <div class="name" title="${fileInfo.name}">${fileInfo.name}</div>
-            `;
-            const deleteBtn = document.createElement('div');
-            deleteBtn.className = 'delete-btn';
-            deleteBtn.innerHTML = '×';
-            deleteBtn.onclick = (e) => {
-                e.preventDefault();
-                if (confirm(`Vuoi eliminare ${fileInfo.name}?`)) {
-                    socket.emit('delete_file', fileInfo.id);
-                }
-            };
-            card.appendChild(link);
-            card.appendChild(deleteBtn);
-            filesContainer.prepend(card);
-        }
-    </script>
+<script src="/socket.io/socket.io.min.js"></script>
+<script type="module" src="/js/main.js"></script>
 </body>
-
 </html>

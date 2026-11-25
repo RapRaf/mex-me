@@ -1,10 +1,12 @@
 .env
 node_modules/
 package-lock.json
-public/uploads/
-dist/*
+dist/
 logs/*.log
-dist/server.js
-dist/public/index.html
 logs/nginx/*
-dist
+# Dati dell'app (file JSON, file caricati, backup): vivono solo sul server
+data/
+# Vecchia cartella upload della clipboard (prima della migrazione)
+public/uploads/
+# Repo dei grafici usata come riferimento per il design
+2F_Slack/
