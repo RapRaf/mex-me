@@ -62,7 +62,7 @@ export function onConnection(s: AppSocket) {
     s.on('clip:upload_progress', (d: any) => {
         if (!d || typeof d.tempId !== 'string' || !s.data.uploads.has(d.tempId)) return;
         s.broadcast.emit('clip:upload_progress', {
-            tempId: d.tempId, percent: Number(d.percent) || 0,
+            tempId: d.tempId,
             loaded: Number(d.loaded) || 0, total: Number(d.total) || 0, speed: Number(d.speed) || 0,
         });
     });

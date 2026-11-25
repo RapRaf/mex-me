@@ -7,8 +7,6 @@ let files = [];
 /** Upload in corso (miei e degli altri): tempId -> {name, size, by, mine, loaded, total, speed, abort} */
 const ghosts = new Map();
 const ta = $('#cbText'), grid = $('#cbFiles'), zone = $('#cbDrop');
-let onPresence = () => { };
-export const setOnPresence = f => { onPresence = f; };
 
 /* ---------- testo ---------- */
 /** Aggiorna il testo senza far saltare il cursore di chi sta scrivendo. */
@@ -158,7 +156,6 @@ document.addEventListener('paste', e => {
 
 /* ---------- connessi ---------- */
 let presence = [];
-export const presenceList = () => presence;
 export function renderPres() {
   // Una voce per persona (o IP): più schede aperte = "×2".
   const groups = new Map();
@@ -174,6 +171,6 @@ export function renderPres() {
     return `<span class="pchip${g.me ? ' me' : ''}"${u ? ` style="--c:${ucol(u)}"` : ''}>${u ? av(u) : `<span class="av">${esc(ini(g.name))}</span>`}${esc(g.name)}${g.me ? ' <small>(tu)</small>' : ''}${g.n > 1 ? ` <small>×${g.n}</small>` : ''}</span>`;
   }).join('');
 }
-socket.on('presence', list => { presence = Array.isArray(list) ? list : []; renderPres(); onPresence(); });
+socket.on('presence', list => { presence = Array.isArray(list) ? list : []; renderPres(); });
 
 renderFiles();

@@ -82,5 +82,4 @@ const store = s => ({
   del(k) { try { s().removeItem(k); } catch (e) { } },
 });
 export const ls = store(() => window.localStorage);
-export const ss = store(() => window.sessionStorage);
 export const lsJson = (k, def) => { try { return JSON.parse(ls.get(k)) ?? def; } catch (e) { return def; } };
