@@ -5,6 +5,7 @@ import multer from 'multer';
 import { UPLOAD_DIR } from './config';
 import { attachments, clipboard, profileOfIp, type ClipFile } from './data';
 import { addAttachment, newId, UserError } from './diario';
+import { addBugAttachment } from './bugs';
 import { getIo, upsert, whoIs, type SocketData } from './hub';
 import { getClientIp } from './access';
 import { log, warn } from './log';
@@ -50,18 +51,18 @@ filesRouter.post('/upload', upload.single('file'), (req: Request, res: Response)
     const profile = profileOfIp(ip);
     const meta = { id: f.filename, name: (f.originalname || 'file').slice(0, 200), size: f.size, contentType: typeOf(f.originalname || '') };
 
-    // Allegato di un task
-    if (body.taskId) {
+    // Allegato di un task o di un bug
+    if (body.taskId || body.bugId) {
         try {
             if (!profile) throw new UserError('no_profile');
-            const a = addAttachment(meta, body.taskId, profile);
+            const a = body.taskId ? addAttachment(meta, body.taskId, profile) : addBugAttachment(meta, String(body.bugId), profile);
             upsert('attachments', [a]);
-            log(`Allegato caricato: ${meta.name} (${meta.size} B) su ${a.taskId} da ${profile}`);
+            log(`Allegato caricato: ${meta.name} (${meta.size} B) su ${a.taskId ? 'task ' + a.taskId : 'bug ' + a.bugId} da ${profile}`);
             res.json({ ok: true, attachment: a });
         } catch (e) {
             unlinkFile(meta.id);
             const code = e instanceof UserError ? e.code : 'error';
-            res.status(code === 'not_found' ? 404 : 400).json({ ok: false, error: code });
+            res.status(code === 'not_found' ? 404 : code === 'forbidden' ? 403 : 400).json({ ok: false, error: code });
         }
         return;
     }

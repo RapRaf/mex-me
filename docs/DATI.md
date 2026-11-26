@@ -2,9 +2,9 @@
 
 Tutto sta in file JSON nella cartella `data/` (vedi [AMBIENTE.md](AMBIENTE.md) per backup e ripristino).
 Ogni file di collezione è un oggetto `{ "id": documento, … }`; ogni documento ha anche il campo `id`.
-I tipi TypeScript sono in `src/data.ts`, le regole e le validazioni in `src/diario.ts`.
+I tipi TypeScript sono in `src/data.ts`, le regole e le validazioni in `src/diario.ts` (task, note, allegati) e `src/bugs.ts` (bug).
 
-Tutti gli id di persona (`assigneeId`, `createdBy`, `updatedBy`, `authorId`, `uploadedBy`) sono **id di `users`**.
+Tutti gli id di persona (`assigneeId`, `createdBy`, `updatedBy`, `authorId`, `uploadedBy`, `reportedBy`, `reviewedBy`) sono **id di `users`**.
 
 ---
 
@@ -42,6 +42,7 @@ Si creano dai nomi di `KNOWN_IPS` (vedi [CLAUDE.md](../CLAUDE.md) §5). Colore e
 | `order` | number | no | Ordine tra fratelli (istante di creazione in ms) |
 | `createdBy`, `updatedBy` | string | no | Messi dal server |
 | `createdAt`, `updatedAt` | ISO | no | Messi dal server |
+| `bugId` | string | no | Solo per i task nati dalla conferma di un bug: id del bug in `bugs.json` |
 
 "Modificabile" = accettato da `task:patch`: è l'elenco `FIELDS` in `src/diario.ts`. Un campo nuovo va aggiunto lì, con la sua validazione.
 
@@ -82,12 +83,33 @@ Si elimina solo la propria nota: lo controlla il server.
 | Campo | Tipo | Note |
 |---|---|---|
 | `id` | string | Uguale al nome del file in `data/uploads/` |
-| `taskId`, `rootId` | string | Task a cui è allegato e suo principale |
+| `taskId`, `rootId` | string | Task a cui è allegato e suo principale; `''` se è l'allegato di un bug non ancora confermato |
+| `bugId` | string? | Bug su cui è stato caricato. Alla conferma del bug `taskId`/`rootId` diventano quelli del nuovo task (il `bugId` resta) |
 | `name` | string | Nome originale (max 200) |
 | `contentType` | string | Tipo ricavato dall'estensione |
 | `sizeBytes` | number | |
 | `uploadedBy` | string | Profilo (dall'IP) |
 | `createdAt` | ISO | |
+
+## `bugs.json`: bug segnalati
+
+| Campo | Tipo | Note |
+|---|---|---|
+| `id` | string | |
+| `title` | string | Obbligatorio, max 200 |
+| `text` | string | Descrizione, max 5000 |
+| `status` | `open` \| `confirmed` \| `rejected` | Da revisionare, confermato (è diventato un task), scartato |
+| `reportedBy` | string | Chi l'ha segnalato (dall'IP) |
+| `reviewedBy`, `reviewedAt` | string \| null, ISO \| null | Chi l'ha confermato o scartato, e quando |
+| `taskId` | string \| null | Task creato alla conferma |
+| `createdAt`, `updatedAt` | ISO | |
+
+**Regole** (`src/bugs.ts`)
+- Chiunque segnala un bug; titolo e descrizione li modifica solo chi l'ha segnalato, finché non è confermato.
+- **Conferma** (chiunque, anche chi l'ha segnalato): crea un task principale "Da fare" con titolo = titolo del bug, note = descrizione, label `bug`, `bugId`, **assegnato a chi conferma** (che ne è anche il creatore). Gli allegati del bug passano al task. Un bug già confermato non si conferma di nuovo: con due conferme contemporanee vince la prima.
+- **Scarta**: il bug va tra gli scartati; si può riaprire ("da revisionare" di nuovo).
+- **Elimina**: solo chi l'ha segnalato e solo se non è confermato; spariscono anche i suoi allegati con i file.
+- Gli allegati si caricano su un bug non confermato; dopo la conferma si allegano al task.
 
 ## `clipboard.json`: Appunti
 

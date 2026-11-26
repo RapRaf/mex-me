@@ -13,8 +13,9 @@
 import net from 'net';
 import fs from 'fs';
 import { KNOWN_IPS, PORT, UPLOAD_DIR, DATA_DIR } from '../config';
-import { users, tasks, comments, attachments, seen, clipboard, syncProfilesFromIps } from '../data';
+import { users, tasks, comments, attachments, bugs, seen, clipboard, syncProfilesFromIps } from '../data';
 import { createTask, patchTask, addComment } from '../diario';
+import { createBug, confirmBug, rejectBug } from '../bugs';
 import { flushAll } from '../store';
 
 const DEV_IP = /^(127\.0\.0\.1|::1|10\.99\.0\.\d{1,3})$/;
@@ -40,7 +41,7 @@ async function main() {
     const force = process.argv.includes('--force');
     if (tasks.size && !force) fail(`Ci sono già dei task in ${DATA_DIR}: niente da fare. Per ripartire da zero: npm run seed -- --force`);
     if (force) {
-        for (const c of [tasks, comments, attachments]) for (const d of c.all()) c.delete(d.id);
+        for (const c of [tasks, comments, attachments, bugs]) for (const d of c.all()) c.delete(d.id);
         seen.data = {}; seen.save();
         for (const f of clipboard.data.files) fs.rmSync(`${UPLOAD_DIR}/${f.id}`, { force: true });
         clipboard.data = { text: '', files: [] }; clipboard.save();
@@ -77,11 +78,16 @@ async function main() {
     addComment({ taskId: a.id, text: 'Perfetto, inizio dalle animazioni oggi pomeriggio' }, P(2));
     addComment({ taskId: b.id, text: 'Succede solo con la versione di rilascio' }, P(3));
 
+    createBug({ title: 'Il calendario non mostra i task di oggi', text: 'Apro Visualizzazione → Calendario: la casella di oggi è vuota anche se ho due task che finiscono oggi.\nSuccede su Firefox, su Chrome sembra a posto.' }, P(1));
+    createBug({ title: 'Il pulsante Allega non risponde su iPhone', text: 'Nel dialog del task tocco "Carica file" e non succede niente.' }, P(3));
+    confirmBug(createBug({ title: 'Le note nuove restano magenta dopo averle lette', text: 'Apro la chat del task, leggo tutto, chiudo: il badge resta acceso finché non ricarico.' }, P(2)).id, P(0));
+    rejectBug(createBug({ title: 'Il sito è lento', text: 'Stamattina caricava piano.' }, P(3)).id, P(1));
+
     clipboard.data.text = 'Appunti di prova\n\nQui si scrive insieme in tempo reale: apri la pagina in due finestre e prova.\n\n- link utili\n- cose da ricordare';
     clipboard.save();
 
     flushAll();
-    console.log(`Dati di prova creati in ${DATA_DIR}: ${tasks.size} task, ${comments.size} note, profili: ${people.join(', ')}.`);
+    console.log(`Dati di prova creati in ${DATA_DIR}: ${tasks.size} task, ${comments.size} note, ${bugs.size} bug, profili: ${people.join(', ')}.`);
     console.log('Ora avvia l\'app: npm run dev');
 }
 

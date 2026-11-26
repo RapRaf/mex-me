@@ -59,6 +59,7 @@ Come funziona MexMe dentro: il percorso di una richiesta, il tempo reale, i modu
   4. a fine upload il server aggiunge il file a `clipboard.json` e manda a tutti `clip:file`;
   5. annullamento o errore → `clip:upload_cancel`; se la scheda si chiude a metà, lo manda il server.
 - **Allegati dei task** (`attach.js`): `POST /upload` con il campo `taskId`; il server crea il documento in `attachments` e manda `diario:upsert`.
+- **Allegati dei bug** (`bugs.js`): `POST /upload` con il campo `bugId` (dopo aver creato il bug); stesso percorso, con `taskId: ''` finché il bug non è confermato.
 - **Chi carica** lo decide il server dall'IP; campi come `profile` mandati dal browser vengono ignorati.
 - **Su disco** i file finiscono in `data/uploads/<id>`, senza nome originale né estensione.
 
@@ -70,8 +71,9 @@ Come funziona MexMe dentro: il percorso di una richiesta, il tempo reale, i modu
 | `config.ts` | Legge il `.env`: `PORT`, `HOST`, `KNOWN_IPS`, `DATA_DIR`; percorsi di `public/`, `data/`, `uploads/`, `backups/` |
 | `access.ts` | `getClientIp`, `isKnownIp`, `ipName`, i due filtri `httpGuard` (Express) e `socketGuard` (Socket.IO) |
 | `store.ts` | `JsonFile` (un file JSON in memoria, salvato 250 ms dopo l'ultima modifica, in modo atomico), `Collection` (`{id: doc}` con `get/has/all/set/delete`), `flushAll`, `startBackups` |
-| `data.ts` | Tipi (`User`, `Task`, `Comment`, `Attachment`, `ClipFile`), le collezioni, `syncProfilesFromIps`, `profileOfIp`, `isProfile` |
+| `data.ts` | Tipi (`User`, `Task`, `Comment`, `Attachment`, `Bug`, `ClipFile`), le collezioni, `syncProfilesFromIps`, `profileOfIp`, `isProfile` |
 | `diario.ts` | Le regole: `createTask`, `patchTask` (+ `FIELDS` = campi modificabili e loro validazione), `deleteTask` (a cascata), `addComment`, `deleteComment` (solo le proprie), `addAttachment`, `deleteAttachment`, `setSeen`. `UserError` per gli errori da mostrare |
+| `bugs.ts` | Le regole dei bug: `createBug`, `editBug`, `confirmBug` (crea il task e gli passa gli allegati), `rejectBug`, `reopenBug`, `deleteBug`, `addBugAttachment` |
 | `files.ts` | `POST /upload` (multer, nomi UTF-8, nessun limite), `GET /files/:id` con header di sicurezza |
 | `hub.ts` | Riferimento a `io`, `upsert`/`remove` (broadcast del diario), `presence`, dati del socket (`ip`, `ipName`, `profile`, `uploads`) |
 | `realtime.ts` | Tutti i messaggi Socket.IO; `command()` per i comandi del diario (controllo profilo + errori + ack) |
@@ -85,7 +87,7 @@ Sono moduli ES caricati da `<script type="module" src="/js/main.js">`; la librer
 - **`state.js`** contiene:
   - `db`: copia dei dati;
   - `app`: profilo, `canWrite`, dialog aperti;
-  - `idx`: `cm` = figli per padre (`''` = task principali), `attBy`, `comBy`;
+  - `idx`: `cm` = figli per padre (`''` = task principali), `attBy`, `comBy`, `attByBug` (allegati dei bug non ancora confermati);
   - `renderAll()`, che chiama la funzione registrata da `main.js`.
 - **Ogni vista** ha una funzione `renderX()` che esce subito se la vista è nascosta.
 - **`renderAll()`** viene chiamata dopo ogni messaggio dal server e dopo ogni modifica locale.
@@ -108,8 +110,8 @@ Sono moduli ES caricati da `<script type="module" src="/js/main.js">`; la librer
 | `clip:upload_started` | `{ tempId, name, size, by }` | qualcuno ha iniziato un upload |
 | `clip:upload_progress` | `{ tempId, loaded, total, speed }` | avanzamento (byte, byte/s) |
 | `clip:upload_cancel` | `{ tempId }` | upload annullato, fallito o scheda chiusa |
-| `diario:init` | `{ me, users, tasks, comments, attachments }` | alla connessione e dopo `diario:sync` |
-| `diario:upsert` | `{ col, docs }` | documenti creati o modificati (`col` = `users`/`tasks`/`comments`/`attachments`) |
+| `diario:init` | `{ me, users, tasks, comments, attachments, bugs }` | alla connessione e dopo `diario:sync` |
+| `diario:upsert` | `{ col, docs }` | documenti creati o modificati (`col` = `users`/`tasks`/`comments`/`attachments`/`bugs`) |
 | `diario:remove` | `{ col, ids }` | documenti eliminati |
 | `diario:seen` | `{ taskId: createdAt }` | note lette del proprio profilo (anche da un'altra scheda) |
 | `presence` | `[{ id, name, profileId }]` | qualcuno si è connesso o disconnesso |
@@ -135,6 +137,11 @@ Valori di `error`:
 | `task:create` | `{ id?, title, parentId? }` | crea un task o sottotask; ack `{ ok, task }`. Assegnato a chi lo crea |
 | `task:patch` | `{ id, patch }` | modifica i campi in `FIELDS` (vedi [DATI.md](DATI.md)). Se cambia lo stato, chiude o riapre i padri (`cascadeParents`) e manda anche loro nello stesso `diario:upsert` |
 | `task:delete` | `{ id }` | elimina il task, i discendenti, le loro note e i loro allegati (file compresi) |
+| `bug:create` | `{ id?, title, text }` | segnala un bug; ack `{ ok, bug }` |
+| `bug:edit` | `{ id, title?, text? }` | modifica un bug (solo chi l'ha segnalato, se non confermato) |
+| `bug:confirm` | `{ id }` | crea il task assegnato a chi conferma, gli passa gli allegati, segna il bug confermato; ack `{ ok, task }`. Manda `diario:upsert` di `tasks`, `attachments` e `bugs` |
+| `bug:reject` / `bug:reopen` | `{ id }` | scarta un bug da revisionare / riapre uno scartato |
+| `bug:delete` | `{ id }` | elimina un bug non confermato e i suoi allegati (solo chi l'ha segnalato) |
 | `comment:add` | `{ id?, taskId, text }` | aggiunge una nota (max 2000 caratteri) |
 | `comment:delete` | `{ id }` | elimina una nota, solo se è propria |
 | `attachment:delete` | `{ id }` | elimina un allegato e il suo file |
@@ -145,7 +152,7 @@ Valori di `error`:
 | Richiesta | Uso |
 |---|---|
 | `GET /` e file in `public/` | la pagina |
-| `POST /upload` | form multipart: `file` (obbligatorio), `tempId` (appunti), `taskId` (allegato). Risposta `{ ok, file }` o `{ ok, attachment }`; errori 400/404 |
+| `POST /upload` | form multipart: `file` (obbligatorio), `tempId` (appunti), `taskId` (allegato di un task) o `bugId` (allegato di un bug). Risposta `{ ok, file }` o `{ ok, attachment }`; errori 400/403 (bug già confermato)/404 |
 | `GET /files/:id` | scarica o mostra un file |
 
 Dettagli di `GET /files/:id`:

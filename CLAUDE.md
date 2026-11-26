@@ -17,6 +17,7 @@ Leggilo tutto prima di modificare qualcosa. Per i dettagli rimanda ai file in `d
    - Allegati e note del team (una chat per ogni task).
    - Una vista **Priorità** a kanban con label.
    - Una vista **Visualizzazione** (calendario e agenda) in sola lettura.
+   - Una sezione **Bug**: chiunque segnala un bug; chi lo conferma lo trasforma subito in un task da fare assegnato a sé.
 
 Non c'è login. **La persona viene riconosciuta dall'indirizzo IP:** ogni IP ammesso è legato a un profilo (vedi §5). Chi arriva da un IP non ammesso viene bloccato.
 
@@ -66,6 +67,7 @@ Guida passo passo per chi parte da zero, esempi di modifiche e problemi comuni: 
 │   ├── store.ts            salvataggio dei file JSON (atomico) + backup giornalieri
 │   ├── data.ts             modello dati, collezioni, profili creati da KNOWN_IPS
 │   ├── diario.ts           regole del diario: validazione, creazione, cascata, note, lette
+│   ├── bugs.ts             regole dei bug: segnalazione, conferma (→ task), scarto, allegati
 │   ├── files.ts            POST /upload e GET /files/:id
 │   ├── hub.ts              riferimento a Socket.IO, broadcast, lista dei connessi
 │   ├── realtime.ts         tutti i messaggi Socket.IO (cosa fa il server per ognuno)
@@ -106,7 +108,7 @@ Dettagli ed elenco completo dei messaggi: **[docs/ARCHITETTURA.md](docs/ARCHITET
 
 1. Il browser si collega con Socket.IO e riceve subito tutto:
    - `clip:init`: testo e file degli appunti;
-   - `diario:init`: `me` (il suo profilo), `users`, `tasks`, `comments`, `attachments`;
+   - `diario:init`: `me` (il suo profilo), `users`, `tasks`, `comments`, `attachments`, `bugs`;
    - `presence`: chi è connesso.
 2. Per modificare, il browser manda un **comando**, per esempio `task:patch {id, patch}`.
    - Il server lo **valida**, salva su file e manda a tutti `diario:upsert {col, docs}` o `diario:remove {col, ids}`.
@@ -129,6 +131,7 @@ Dettagli ed elenco completo dei messaggi: **[docs/ARCHITETTURA.md](docs/ARCHITET
 | `attach.js` | Dialog allegati e caricamento allegati |
 | `chat.js` | Dialog note del team |
 | `prio.js` | Vista Priorità (kanban), label (`LABELS`), trascinamento |
+| `bugs.js` | Vista Bug: modulo di segnalazione con allegati, coda da revisionare, conferma che crea il task |
 | `admin.js` | Vista Visualizzazione: calendario e agenda (il file si chiama ancora admin) |
 | `util.js` | Funzioni di base: `$`, `esc`, date, formati, colori persona (`COLORS`), icone SVG, `localStorage` |
 
@@ -138,6 +141,7 @@ Viste (indirizzo nella barra):
 |---|---|
 | `#home` | Home |
 | `#priorita` | Priorità |
+| `#bug` | Bug |
 | `#visualizzazione` | Calendario |
 | `#visualizzazione-agenda` | Agenda |
 | `#appunti` | Appunti |

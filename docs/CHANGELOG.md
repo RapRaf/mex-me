@@ -4,6 +4,8 @@ Le modifiche, dalla più recente. Chi consegna una funzione aggiunge una riga so
 
 ## Non ancora pubblicato
 
+- Nuova sezione **Bug** (`#bug`): chiunque segnala un bug con descrizione e allegati (anche screenshot incollati); chi lo conferma lo trasforma subito in un task "Da fare" assegnato a sé, con label Bug e gli allegati del bug. Si può anche scartare e riaprire. Contatore dei bug da revisionare nel menu.
+
 - Chiusura automatica: quando tutti i sottotask sono "Fatto" anche il task padre diventa "Fatto" (e risale l'albero); se un sottotask si riapre il padre torna "In corso". La decide il server.
 - Home: nuovi filtri (cerca, persona anche per i colleghi, priorità, label, "In ritardo", "Tutti"), ordinamento (aperti da più/meno tempo, scadenza, priorità, titolo…) e "Azzera filtri". "Solo i miei" diventa la persona "I miei".
 - Home: più spazio a titolo e note (fino a 4 righe), date una per riga in una sola colonna, con da quanto è aperto il task.

@@ -17,7 +17,7 @@
     <div class="top">
       <div><div class="brand">MexMe</div><h1 id="hT"></h1></div>
       <div class="right">
-        <nav class="nav" id="nav" aria-label="Sezioni" hidden><a href="#home" id="nHome">Home</a><a href="#priorita" id="nPrio">Priorità</a><a href="#visualizzazione" id="nAdmin">Visualizzazione</a><a href="#appunti" id="nClip">Appunti</a></nav>
+        <nav class="nav" id="nav" aria-label="Sezioni" hidden><a href="#home" id="nHome">Home</a><a href="#priorita" id="nPrio">Priorità</a><a href="#bug" id="nBug">Bug<span class="nb" id="nBugN" hidden></span></a><a href="#visualizzazione" id="nAdmin">Visualizzazione</a><a href="#appunti" id="nClip">Appunti</a></nav>
         <div class="uchip" id="uchip" hidden></div>
       </div>
     </div>
@@ -78,6 +78,32 @@
   </div>
   <div class="kb" id="board"></div>
 </main>
+
+<!-- Bug: segnalazione, revisione e conferma (che crea un task) -->
+<main class="wrap" id="bugs" hidden>
+  <div class="bwrap">
+    <aside class="bnew" id="bNewC" aria-labelledby="bNewH">
+      <form id="bNew" autocomplete="off" novalidate>
+        <div class="bnh"><h2 id="bNewH">Segnala un bug</h2><button type="button" class="blink" id="bCancel" hidden>Annulla</button></div>
+        <label class="f">Cosa non funziona<input class="fi" id="bT" maxlength="200" placeholder="Es. il calendario non mostra i task di oggi"></label>
+        <label class="f">Come succede<textarea class="fi" id="bD" maxlength="5000" placeholder="Dove eri, cosa hai fatto, cosa ti aspettavi e cosa è successo invece."></textarea></label>
+        <div class="bdrop"><span>Trascina qui screenshot e file, o incollali con Ctrl+V</span><button type="button" class="btn" id="bAtt"></button></div>
+        <div class="bthumbs" id="bPend" hidden></div>
+        <button class="btn pri bsend" id="bSend">Segnala bug</button>
+        <p class="bkbd">Ctrl+Invio per inviare</p>
+      </form>
+    </aside>
+    <section class="bq" aria-label="Bug segnalati">
+      <div class="bar">
+        <div class="chips" id="bChips" role="group" aria-label="Filtra i bug"></div>
+        <span class="save" id="bSave" aria-live="polite"></span>
+      </div>
+      <p class="bhow" id="bHow">Chi conferma un bug se ne prende carico: diventa subito un suo task da fare, con la label Bug e gli allegati.</p>
+      <div class="blist" id="bList"></div>
+    </section>
+  </div>
+</main>
+<input type="file" id="bFileIn" multiple hidden>
 
 <main class="wrap" id="admin" hidden>
   <div class="bar">

@@ -11,7 +11,7 @@ export interface SocketData {
     uploads: Set<string>;       // tempId degli upload Appunti in corso da questa scheda
 }
 export type AppSocket = Socket<any, any, any, SocketData>;
-export type Collections = 'users' | 'tasks' | 'comments' | 'attachments';
+export type Collections = 'users' | 'tasks' | 'comments' | 'attachments' | 'bugs';
 
 let io: Server<any, any, any, SocketData>;
 export const setIo = (s: Server<any, any, any, SocketData>) => { io = s; };

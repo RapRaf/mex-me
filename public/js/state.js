@@ -2,7 +2,7 @@
 import { $, esc, st, av, isDate, today, CLIP, CHAT } from './util.js';
 
 /** Copia locale dei dati del server (aggiornata in tempo reale). */
-export const db = { users: {}, tasks: {}, comments: {}, attachments: {}, seen: {} };
+export const db = { users: {}, tasks: {}, comments: {}, attachments: {}, bugs: {}, seen: {} };
 
 /** Stato dell'interfaccia di questa scheda. */
 export const app = {
@@ -15,8 +15,8 @@ export const app = {
   loaded: false,     // dati del diario ricevuti
 };
 
-/** Indici: figli per padre ('' = principali), allegati e note per task. */
-export const idx = { cm: {}, attBy: {}, comBy: {} };
+/** Indici: figli per padre ('' = principali), allegati e note per task, allegati per bug. */
+export const idx = { cm: {}, attBy: {}, comBy: {}, attByBug: {} };
 
 export function rebuild() {
   const cm = {};
@@ -33,7 +33,11 @@ const byTask = list => {
   for (const k in m) m[k].sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)));
   return m;
 };
-export const rebuildAtt = () => { idx.attBy = byTask(Object.values(db.attachments)); };
+export const rebuildAtt = () => {
+  const all = Object.values(db.attachments);
+  idx.attBy = byTask(all.filter(a => a.taskId));
+  idx.attByBug = byTask(all.filter(a => !a.taskId && typeof a.bugId === 'string').map(a => ({ ...a, taskId: a.bugId })));
+};
 export const rebuildCom = () => { idx.comBy = byTask(Object.values(db.comments).filter(c => typeof c.text === 'string')); };
 
 export function desc(id, out = [], d = 0) { if (d > 60) return out; for (const c of idx.cm[id] || []) { out.push(c); desc(c.id, out, d + 1); } return out; }
@@ -64,4 +68,4 @@ export const renderAll = () => renderer();
 
 /* ---------- messaggi ---------- */
 export function banner(t) { const n = $('#note'); n.textContent = t; n.hidden = !t; }
-export function setSave(t) { $('#save').textContent = t; $('#pSave').textContent = t; }
+export function setSave(t) { $('#save').textContent = t; $('#pSave').textContent = t; $('#bSave').textContent = t; }

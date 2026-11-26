@@ -97,7 +97,9 @@ export function renderDlg() {
     into.append(b, r);
   }
   const by = db.users[t.createdBy];
-  $('#dI').textContent = 'Creato il ' + (t.createdAt ? fDL.format(new Date(t.createdAt)) : '—') + (by ? ' da ' + by.name : '');
+  const bug = t.bugId && db.bugs[t.bugId], rep = bug && db.users[bug.reportedBy];
+  $('#dI').textContent = 'Creato il ' + (t.createdAt ? fDL.format(new Date(t.createdAt)) : '—') + (by ? ' da ' + by.name : '')
+    + (bug ? ` · da un bug segnalato da ${rep ? rep.name : 'qualcuno'}` : '');
 }
 
 function commitNotes() {

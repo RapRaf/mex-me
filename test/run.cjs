@@ -119,6 +119,37 @@ async function protocol() {
   ok((await getT(P.id)).status === 'done', 'una modifica che non cambia lo stato non riapre il padre');
   await ask(a, 'task:delete', { id: P.id });
 
+  console.log('\nBug');
+  r = await ask(b, 'bug:create', { title: '  Il calendario non si apre ', text: 'Su Firefox resta bianco' });
+  const bug = r.bug;
+  ok(r.ok && bug.title === 'Il calendario non si apre' && bug.status === 'open' && bug.reportedBy === 'beta', 'segnala un bug (chi segnala lo decide l\'IP)');
+  ok(!(await ask(b, 'bug:create', { title: ' ' })).ok, 'bug senza titolo rifiutato');
+  const bfd = new FormData(); bfd.append('bugId', bug.id); bfd.append('file', new Blob([new Uint8Array([137, 80, 78, 71])], { type: 'image/png' }), 'schermo.png');
+  let bj = await (await http('/upload', { method: 'POST', body: bfd }, '10.0.0.2')).json();
+  ok(bj.ok && bj.attachment.bugId === bug.id && bj.attachment.taskId === '', 'allegato su un bug');
+  r = await ask(a, 'bug:edit', { id: bug.id, title: 'altro' }); ok(!r.ok && r.error === 'forbidden', 'solo chi l\'ha segnalato lo modifica');
+  r = await ask(a, 'bug:delete', { id: bug.id }); ok(!r.ok && r.error === 'forbidden', 'solo chi l\'ha segnalato lo elimina');
+  r = await ask(a, 'bug:reject', { id: bug.id }); ok(r.ok, 'scarta un bug');
+  r = await ask(a, 'bug:reopen', { id: bug.id }); ok(r.ok, 'riapre un bug scartato');
+  r = await ask(a, 'bug:confirm', { id: bug.id });
+  const bt = r.task;
+  ok(r.ok && bt.status === 'todo' && bt.assigneeId === 'alfa' && bt.label === 'bug' && bt.notes === 'Su Firefox resta bianco' && bt.bugId === bug.id && bt.parentId === null, 'conferma = task da fare assegnato a chi conferma, label bug, note = descrizione');
+  const snap = await (async () => { const p = wait(a, 'diario:init'); a.emit('diario:sync'); return p; })();
+  const sb = snap.bugs.find(x => x.id === bug.id), sa = snap.attachments.find(x => x.id === bj.attachment.id);
+  ok(sb.status === 'confirmed' && sb.reviewedBy === 'alfa' && sb.taskId === bt.id, 'il bug resta come confermato, collegato al task');
+  ok(sa.taskId === bt.id, 'gli allegati del bug passano al task');
+  r = await ask(b, 'bug:confirm', { id: bug.id }); ok(!r.ok && r.error === 'forbidden', 'un bug già confermato non si conferma di nuovo');
+  const bfd2 = new FormData(); bfd2.append('bugId', bug.id); bfd2.append('file', new Blob(['x']), 'tardi.txt');
+  res = await http('/upload', { method: 'POST', body: bfd2 }, '10.0.0.2'); ok(res.status === 403, 'su un bug confermato non si allega più (si allega al task)');
+  r = await ask(b, 'bug:create', { title: 'Mio bug' }); r = await ask(b, 'bug:confirm', { id: r.bug.id });
+  ok(r.ok && r.task.assigneeId === 'beta', 'chi segnala può anche confermare il proprio bug');
+  r = await ask(b, 'bug:create', { title: 'Da eliminare' }); const del = r.bug;
+  const bfd3 = new FormData(); bfd3.append('bugId', del.id); bfd3.append('file', new Blob(['x']), 'x.txt');
+  bj = await (await http('/upload', { method: 'POST', body: bfd3 }, '10.0.0.2')).json();
+  r = await ask(b, 'bug:delete', { id: del.id }); ok(r.ok, 'chi l\'ha segnalato elimina un bug non confermato');
+  res = await http('/files/' + bj.attachment.id, {}, '10.0.0.1'); ok(res.status === 404, 'eliminando il bug spariscono i suoi allegati');
+  await ask(a, 'task:delete', { id: bt.id });
+
   console.log('\nNote del team');
   r = await ask(b, 'comment:add', { taskId: sub2.id, text: 'nota di beta' }); ok(r.ok, 'aggiunge una nota');
   await ask(a, 'comment:add', { taskId: sub.id, text: 'nota di alfa' });

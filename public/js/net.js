@@ -172,6 +172,7 @@ socket.on('diario:init', d => {
   db.tasks = byId((d.tasks || []).map(withLocal));
   db.comments = byId(d.comments);
   db.attachments = byId(d.attachments);
+  db.bugs = byId(d.bugs);
   app.loaded = true;
   rebuild(); rebuildCom(); rebuildAtt();
 });

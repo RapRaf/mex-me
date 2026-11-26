@@ -38,6 +38,24 @@ export interface Task {
     priority?: 'high' | 'med' | 'low';  // vista Priorità; assente = med
     label?: string | null;              // vista Priorità
     prioOrder?: number;                 // ordine nella colonna; assente = order
+    bugId?: string;                     // bug da cui è nato il task (vedi Bug)
+}
+
+/**
+ * Bug segnalato. Chi lo conferma lo trasforma in un task "Da fare" assegnato a sé
+ * (label "bug"); gli allegati del bug passano al task.
+ */
+export interface Bug {
+    id: string;
+    title: string;
+    text: string;
+    status: 'open' | 'confirmed' | 'rejected';   // da revisionare, confermato, scartato
+    reportedBy: string;
+    createdAt: string;
+    updatedAt: string;
+    reviewedBy: string | null;    // chi l'ha confermato o scartato
+    reviewedAt: string | null;
+    taskId: string | null;        // task creato alla conferma
 }
 
 /** Nota del team: un messaggio della chat di un task. */
@@ -53,8 +71,9 @@ export interface Comment {
 /** File allegato a un task. L'id coincide con quello del file in data/uploads. */
 export interface Attachment {
     id: string;
-    taskId: string;
+    taskId: string;     // '' finché è l'allegato di un bug non ancora confermato
     rootId: string;
+    bugId?: string;     // allegato caricato su un bug
     name: string;
     contentType: string;
     sizeBytes: number;
@@ -81,6 +100,7 @@ export const users = new Collection<User>(file('users.json'));
 export const tasks = new Collection<Task>(file('tasks.json'));
 export const comments = new Collection<Comment>(file('comments.json'));
 export const attachments = new Collection<Attachment>(file('attachments.json'));
+export const bugs = new Collection<Bug>(file('bugs.json'));
 /** Note lette: {profilo: {taskId: createdAt dell'ultima nota vista}} */
 export const seen = new JsonFile<Record<string, Record<string, string>>>(file('seen.json'), () => ({}));
 export const clipboard = new JsonFile<Clipboard>(file('clipboard.json'), () => ({ text: '', files: [] }));
@@ -130,6 +150,7 @@ export function syncProfilesFromIps() {
         for (const t of tasks.all()) for (const k of [t.assigneeId, t.createdBy, t.updatedBy]) if (k) usedIds.add(k);
         for (const c of comments.all()) usedIds.add(c.authorId);
         for (const a of attachments.all()) usedIds.add(a.uploadedBy);
+        for (const b of bugs.all()) for (const k of [b.reportedBy, b.reviewedBy]) if (k) usedIds.add(k);
         for (const u of all()) {
             if (u.auto && !linked.has(u.id) && !usedIds.has(u.id)) { users.delete(u.id); log(`Rimosso il profilo ${u.name} (non più in KNOWN_IPS)`); }
         }

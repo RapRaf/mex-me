@@ -1,8 +1,9 @@
-import { users, tasks, comments, attachments, clipboard, isProfile } from './data';
+import { users, tasks, comments, attachments, bugs, clipboard, isProfile } from './data';
 import {
     createTask, patchTask, cascadeParents, deleteTask, addComment, deleteComment, deleteAttachment,
     setSeen, seenOf, UserError,
 } from './diario';
+import { createBug, editBug, confirmBug, rejectBug, reopenBug, deleteBug } from './bugs';
 import { upsert, remove, broadcastPresence, initSocketData, socketsOf, getIo, type AppSocket } from './hub';
 import { unlinkFile } from './files';
 import { log, error } from './log';
@@ -26,7 +27,7 @@ function command(s: AppSocket, name: string, fn: (profile: string, payload: any)
 }
 
 const sendDiario = (s: AppSocket) => {
-    s.emit('diario:init', { me: s.data.profile, users: users.all(), tasks: tasks.all(), comments: comments.all(), attachments: attachments.all() });
+    s.emit('diario:init', { me: s.data.profile, users: users.all(), tasks: tasks.all(), comments: comments.all(), attachments: attachments.all(), bugs: bugs.all() });
     if (s.data.profile) s.emit('diario:seen', seenOf(s.data.profile));
 };
 
@@ -118,6 +119,38 @@ export function onConnection(s: AppSocket) {
         const id = deleteAttachment(p?.id);
         remove('attachments', [id]);
         unlinkFile(id);
+    });
+
+    /* ---------- bug ---------- */
+    command(s, 'bug:create', (by, p) => {
+        const b = createBug(p || {}, by);
+        upsert('bugs', [b]);
+        log(`Bug segnalato da ${by}: ${b.title}`);
+        return { bug: b };
+    });
+
+    command(s, 'bug:edit', (by, p) => { upsert('bugs', [editBug(p?.id, p || {}, by)]); });
+
+    // Conferma = nuovo task assegnato a chi conferma; prima il task e gli allegati, poi il bug.
+    command(s, 'bug:confirm', (by, p) => {
+        const r = confirmBug(p?.id, by);
+        upsert('tasks', [r.task]);
+        upsert('attachments', r.moved);
+        upsert('bugs', [r.bug]);
+        log(`Bug confermato da ${by}: ${r.bug.title} → task ${r.task.id}`);
+        return { task: r.task };
+    });
+
+    command(s, 'bug:reject', (by, p) => { upsert('bugs', [rejectBug(p?.id, by)]); });
+
+    command(s, 'bug:reopen', (_by, p) => { upsert('bugs', [reopenBug(p?.id)]); });
+
+    command(s, 'bug:delete', (by, p) => {
+        const id = String(p?.id ?? '');
+        const rm = deleteBug(id, by);
+        remove('attachments', rm);
+        rm.forEach(unlinkFile);
+        remove('bugs', [id]);
     });
 
     command(s, 'seen:set', (by, p) => {

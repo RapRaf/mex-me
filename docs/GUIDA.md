@@ -219,6 +219,11 @@ Il risultato arriva a tutte le pagine con `diario:upsert`, che aggiorna i dati e
   - [ ] titolo, stato, assegnato, date e note si salvano;
   - [ ] si aggiunge un sottotask (anche dentro un sottotask con ＋);
   - [ ] l'eliminazione chiede conferma.
+- [ ] Bug:
+  - [ ] si segnala un bug con screenshot incollato (`Ctrl+V`) e un file trascinato;
+  - [ ] il contatore nel menu compare per tutti;
+  - [ ] "Conferma e prendi in carico" crea il task "Da fare" assegnato a chi conferma, con label Bug e allegati, visibile in Home e Priorità;
+  - [ ] Scarta / Riapri / Modifica / Elimina, e i limiti per chi non ha segnalato il bug.
 - [ ] Allegati: caricamento di più file, graffetta con il numero, anteprima, eliminazione.
 - [ ] Note:
   - [ ] Invio invia, Maiusc+Invio va a capo;

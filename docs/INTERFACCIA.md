@@ -34,7 +34,8 @@ Come sono fatte le viste, come si usano e perché sono fatte così. Molte scelte
 ## Struttura della pagina
 
 - **Banda:**
-  - "MexMe", titolo della vista, menu (Home · Priorità · Visualizzazione · Appunti), chip con avatar e nome della persona;
+  - "MexMe", titolo della vista, menu (Home · Priorità · Bug · Visualizzazione · Appunti), chip con avatar e nome della persona;
+  - accanto a "Bug" un contatore magenta con i bug da revisionare;
   - in Home e Priorità c'è anche il campo per il nuovo task.
 - **Sotto la banda:** la vista attiva.
 - **Avvisi** (errori, connessione persa): striscia rosa sotto la banda (`#note`).
@@ -124,6 +125,22 @@ Chi arriva da un IP senza profilo (possibile solo con `KNOWN_IPS` vuota) vede so
 - Campo in fondo: Invio invia, Maiusc+Invio va a capo.
 - Aprire la chat segna le note come lette; vale per il profilo, quindi su tutti i suoi dispositivi.
 - Dalla Visualizzazione la chat è in sola lettura.
+
+## Bug (`#bug`)
+
+- **Due colonne** (una sola sotto i 900px):
+  - a sinistra il modulo **"Segnala un bug"**, che resta in vista scorrendo: "Cosa non funziona" (titolo), "Come succede" (descrizione), zona per i file (trascina, "Scegli file" o `Ctrl+V` di uno screenshot, che prende il nome "Screenshot data ora"), anteprime dei file scelti con ×, "Segnala bug" (`Ctrl+Invio`). I file si caricano subito dopo la creazione del bug;
+  - a destra la coda, filtrata con i bottoni Da revisionare / Confermati / Scartati (con i conteggi). Sopra la coda "da revisionare" una riga spiega cosa fa la conferma.
+- **Colore = stato** (striscia a sinistra del bug): magenta da revisionare, verde acqua confermato, grigio scartato.
+- **Un bug da revisionare** mostra titolo, chi l'ha segnalato e quando, descrizione, miniature degli allegati (le immagini in anteprima; × per eliminarle, con conferma), e le azioni in ordine di importanza:
+  - **"Conferma e prendi in carico"** (unico bottone pieno, verde): crea subito il task e porta alla scheda Confermati, dove la striscia del task compare con una breve animazione;
+  - "Allega", "Modifica" (solo per chi l'ha segnalato: il bug si apre nel modulo a sinistra, bordato di blu, con "Annulla");
+  - a destra, solo testo: "Scarta" ed "Elimina" (solo per chi l'ha segnalato), entrambi con conferma in due tempi.
+- **Trascinare file** su un bug non confermato li carica su quel bug; sul modulo li aggiunge al bug che si sta scrivendo.
+- **Un bug confermato** termina con una striscia verde: "Confermato da X" e il task nato dal bug (stato, assegnatario, "Apri il task" → dialog del task). Se il task viene eliminato lo dice.
+- **Un bug scartato**: "Scartato da X", "Riapri", "Elimina" per chi l'ha segnalato.
+- Il dialog del task nato da un bug lo ricorda in fondo: "da un bug segnalato da X".
+- In Priorità il task compare con la label Bug.
 
 ## Priorità (`#priorita`)
 

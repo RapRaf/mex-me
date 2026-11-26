@@ -277,6 +277,84 @@ input.fsel{width:180px}
 @media(max-width:860px){.kb{grid-template-columns:minmax(0,1fr)}.kcol{min-height:0}}
 @media(pointer:coarse),(max-width:860px){.kpr{display:inline-block}}
 
+/* ---------- bug ---------- */
+/* Colore = stato: magenta da revisionare, verde acqua confermato (diventato task), grigio scartato. */
+.nb{display:inline-grid;place-items:center;min-width:20px;height:20px;margin-left:7px;padding:0 6px;border-radius:99px;background:var(--acc);color:#fff;font:700 12px/1 "Red Hat Text",sans-serif;font-variant-numeric:tabular-nums;vertical-align:1px}
+.bwrap{display:grid;grid-template-columns:minmax(300px,370px) minmax(0,1fr);gap:24px;align-items:start}
+.bnew{position:sticky;top:16px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px 18px 14px;box-shadow:inset 0 5px 0 var(--acc);transition:border-color .15s,background .15s}
+.bnew.editing{box-shadow:inset 0 5px 0 var(--doing);border-color:color-mix(in srgb,var(--doing) 45%,var(--line))}
+.bnew form{display:grid;gap:14px}
+.bnh{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:32px}
+.bnh h2{font-size:21px}
+.bnew .fi{font-weight:400;color:var(--ink)}.bnew .fi::placeholder{color:var(--mute);opacity:.75}
+.bnew textarea.fi{min-height:128px}
+.bdrop{border:1.5px dashed var(--line);border-radius:12px;padding:10px 10px 10px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:14px;line-height:1.35;color:var(--mute);transition:border-color .15s,background .15s}
+.bdrop span{flex:1 1 150px}
+.bdrop .btn,.bact .btn{min-height:40px;display:inline-flex;align-items:center;gap:6px;font-size:14px}
+.bnew.dropon,.bug.dropon{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 5%,var(--panel))}
+.bnew.dropon .bdrop{border-color:var(--acc);color:var(--acc)}
+.bsend{width:100%;min-height:50px;font-size:16px}
+.bkbd{margin:-6px 0 0;text-align:center;font-size:12px;color:var(--mute)}
+@media(pointer:coarse){.bkbd{display:none}}
+.bq .bar{margin-bottom:6px}
+.bhow{margin:0 0 14px;font-size:14px;color:var(--mute);max-width:72ch}
+.blist{display:grid;gap:12px}
+.bug{--bc:var(--acc);background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px 18px 14px 23px;display:grid;gap:12px;box-shadow:inset 5px 0 0 var(--bc);transition:border-color .15s,background .15s}
+.bug.b-confirmed{--bc:var(--done)}.bug.b-rejected{--bc:var(--todo)}
+.bug.b-rejected h3,.bug.b-rejected .btx{color:var(--mute)}
+.bug.editing{border-color:var(--doing)}
+.bh{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.bh h3{font-size:19px;line-height:1.25;overflow-wrap:anywhere;padding-top:2px}
+.bby{display:flex;align-items:center;gap:9px;flex:none;font-size:13px;color:var(--mute);line-height:1.25}
+.bby .av{width:30px;height:30px;font-size:11px}
+.bby b{display:block;color:var(--ink);font-size:14px;font-weight:600}
+.bby time{display:block}
+.btx{margin:0;font-size:15px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere;max-width:75ch}
+.bthumbs{display:flex;flex-wrap:wrap;gap:8px}
+.bth,.bth a{display:grid;place-items:center;align-content:center;gap:3px;color:inherit;text-decoration:none}
+.bth{position:relative;width:84px;height:84px;padding:6px;border-radius:11px;border:1px solid var(--line);background:var(--field);overflow:hidden;flex:none}
+.bth a{position:absolute;inset:0;padding:6px}
+.bth a:hover{background:color-mix(in srgb,var(--doing) 8%,var(--field))}
+.bth img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.bext{font:700 15px "Red Hat Display",sans-serif;color:var(--mute)}
+.bfn{font-size:11px;color:var(--mute);max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bx{position:absolute;top:4px;right:4px;z-index:1;min-width:24px;height:24px;border-radius:99px;border:0;background:rgba(7,15,38,.72);color:#fff;font-size:15px;line-height:1;display:grid;place-items:center;padding:0 6px}
+.bx.warn{background:var(--acc);font-size:12px;font-weight:700}
+.bact{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding-top:12px;border-top:1px solid var(--line)}
+.bgo{min-height:42px;border:0;border-radius:11px;padding:0 16px 0 13px;background:#0b7f70;color:#fff;font-weight:700;display:inline-flex;align-items:center;gap:8px}
+.bgo:hover{background:#086a5d}
+.bsp{flex:1}
+.blink{border:0;background:none;color:var(--mute);font-weight:600;min-height:40px;padding:0 10px;border-radius:9px}
+.blink:hover{color:var(--ink);background:var(--field)}
+.blink.danger{color:var(--acc)}
+.blink.warn{background:var(--acc);color:#fff}
+.bug button[disabled],.bnew button[disabled]{opacity:.5;cursor:default}
+.bres{display:flex;flex-wrap:wrap;gap:10px 12px;align-items:center;padding:10px 12px;border-radius:12px;font-size:14px}
+.bres.ok{background:color-mix(in srgb,var(--done) 9%,var(--panel));border:1px solid color-mix(in srgb,var(--done) 30%,var(--line))}
+.bres.no{background:var(--field)}
+.bstamp{display:inline-flex;align-items:center;gap:6px;color:var(--mute)}
+.bstamp b{color:var(--ink)}
+.bres.ok .bstamp svg{color:var(--done);flex:none}
+.btask{flex:1 1 280px;display:flex;align-items:center;gap:10px;min-height:46px;padding:6px 12px 6px 14px;border-radius:10px;border:1px solid var(--line);background:var(--panel);box-shadow:inset 4px 0 0 var(--sc);text-align:left;transition:border-color .15s}
+.btask:hover{border-color:var(--sc)}
+.btask .pill{min-height:28px;font-size:12px;flex:none}
+.btt{flex:1;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btask .av{width:24px;height:24px;font-size:10px}
+.bwho{display:inline-flex;align-items:center;gap:7px;font-weight:600}
+.bopen{font-size:13px;font-weight:700;color:var(--doing);white-space:nowrap}
+.bgone{color:var(--mute)}
+/* conferma: la striscia del task "nasce" dal bug */
+.bug.fresh{animation:bfl 1.4s ease-out}
+.bug.fresh .bres{animation:bborn .65s cubic-bezier(.2,.8,.2,1) both}
+@keyframes bfl{from{border-color:var(--done);background:color-mix(in srgb,var(--done) 7%,var(--panel))}}
+@keyframes bborn{from{opacity:0;transform:translateY(-8px) scale(.97)}}
+.bempty{text-align:center;padding:48px 20px;border:1.5px dashed var(--line);border-radius:16px;color:var(--mute)}
+.bempty svg{width:30px;height:30px;padding:10px;box-sizing:content-box;border-radius:99px;color:var(--done);background:color-mix(in srgb,var(--done) 12%,var(--panel))}
+.bempty h2{color:var(--ink);font-size:20px;margin:12px 0 4px}
+.bempty p{margin:0;font-size:15px}
+@media(max-width:900px){.bwrap{grid-template-columns:minmax(0,1fr);gap:18px}.bnew{position:static}}
+@media(max-width:600px){.bh{flex-direction:column;gap:8px}.bug{padding:14px 14px 12px 19px}.bact .bgo{flex:1 1 100%;justify-content:center}.btask{flex-wrap:wrap}.btt{flex-basis:calc(100% - 140px)}}
+
 /* ---------- dialog ---------- */
 .ov{position:fixed;inset:0;background:rgba(7,15,38,.55);display:grid;place-items:center;padding:24px;z-index:10}
 .dlg{width:min(880px,100%);max-height:calc(100vh - 48px);overflow:auto;background:var(--panel);border-radius:22px;box-shadow:0 30px 80px -20px rgba(0,0,0,.5);animation:pop .18s ease-out}

@@ -11,16 +11,17 @@ import { renderFiles, closeFiles } from './attach.js';
 import { renderChat, closeChat } from './chat.js';
 import { renderPrio, resetPrio } from './prio.js';
 import { renderAdmin, setAdminView } from './admin.js';
+import { renderBugs } from './bugs.js';
 
 setRenderer(() => {
   if (app.chatFor) markSeen(app.chatFor);
   renderLogin(); renderUser(); renderPres();
   if (!isLogged()) return;
-  renderParentSelect(); renderList(); renderPrio(); renderAdmin();
+  renderParentSelect(); renderList(); renderPrio(); renderBugs(); renderAdmin();
   renderDlg(); renderFiles(); renderChat();
 });
 
-const VIEWS = { home: 'Task aperti', prio: 'Priorità', admin: 'Visualizzazione', clip: 'Appunti' };
+const VIEWS = { home: 'Task aperti', prio: 'Priorità', bugs: 'Bug', admin: 'Visualizzazione', clip: 'Appunti' };
 let lastView = '';
 
 // Indirizzi della vecchia vista "Admin", ora "Visualizzazione" (segnalibri).
@@ -29,7 +30,7 @@ const LEGACY = { '#admin': '#visualizzazione', '#admin-lista': '#visualizzazione
 function route() {
   if (LEGACY[location.hash]) history.replaceState(null, '', LEGACY[location.hash]);
   const logged = isLogged(), boot = isBooting(), h = location.hash;
-  const view = !logged ? (boot ? '' : 'clip') : h.startsWith('#visualizzazione') ? 'admin' : h === '#priorita' ? 'prio' : h === '#appunti' ? 'clip' : 'home';
+  const view = !logged ? (boot ? '' : 'clip') : h.startsWith('#visualizzazione') ? 'admin' : h === '#priorita' ? 'prio' : h === '#bug' ? 'bugs' : h === '#appunti' ? 'clip' : 'home';
   document.body.classList.toggle('anon', !logged);
   for (const v of Object.keys(VIEWS)) $('#' + v).hidden = v !== view;
   $('#nav').hidden = !logged;
@@ -38,7 +39,7 @@ function route() {
   $('#hT').textContent = title;
   document.title = title ? `${title} · MexMe` : 'MexMe';
   setAdminView(h === '#visualizzazione-agenda' ? 'list' : 'grid');
-  for (const [id, on] of [['#nHome', view === 'home'], ['#nPrio', view === 'prio'], ['#nAdmin', view === 'admin'], ['#nClip', view === 'clip']]) {
+  for (const [id, on] of [['#nHome', view === 'home'], ['#nPrio', view === 'prio'], ['#nBug', view === 'bugs'], ['#nAdmin', view === 'admin'], ['#nClip', view === 'clip']]) {
     if (on) $(id).setAttribute('aria-current', 'page'); else $(id).removeAttribute('aria-current');
   }
   // Cambiare vista chiude i dialog aperti.
