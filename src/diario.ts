@@ -73,6 +73,39 @@ export function patchTask(id: unknown, patch: unknown, by: string): Task {
     return tasks.set({ ...t, ...out, updatedAt: new Date().toISOString(), updatedBy: by } as Task);
 }
 
+/** Data di oggi in ora locale (YYYY-MM-DD). */
+function localDay(): string {
+    const d = new Date(), p = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+/**
+ * Stato dei padri dopo che `t` ha cambiato stato, risalendo l'albero:
+ * - tutti i sottotask fatti ⇒ il padre diventa Fatto (con fine, inizio e completedAt come a mano);
+ * - un sottotask riaperto sotto un padre fatto ⇒ il padre torna In corso.
+ * Ritorna i padri modificati (da mandare a tutti). Stessa regola, come previsione, in public/js/net.js.
+ */
+export function cascadeParents(t: Task, by: string): Task[] {
+    const out: Task[] = [];
+    let cur = t;
+    for (let g = 0; g < 60 && cur.parentId && cur.parentId !== cur.id; g++) {
+        const p = tasks.get(cur.parentId);
+        if (!p) break;
+        const kids = tasks.all().filter(x => x.parentId === p.id && x.id !== p.id);
+        const allDone = kids.length > 0 && kids.every(x => x.status === 'done');
+        const now = new Date().toISOString(), day = localDay();
+        let patch: Partial<Task>;
+        if (allDone && p.status !== 'done') {
+            patch = { status: 'done', endDate: p.endDate || day, startDate: p.startDate || day, completedAt: now };
+        } else if (!allDone && p.status === 'done' && cur.status !== 'done') {
+            patch = { status: 'doing', completedAt: null };
+        } else break;
+        cur = tasks.set({ ...p, ...patch, updatedAt: now, updatedBy: by });
+        out.push(cur);
+    }
+    return out;
+}
+
 /** Figli diretti per id del padre (un parentId che punta a un task inesistente = principale). */
 function childrenMap(): Map<string, Task[]> {
     const m = new Map<string, Task[]>();

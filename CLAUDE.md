@@ -158,6 +158,7 @@ I vecchi `#admin` e `#admin-lista` vengono reindirizzati.
 - Automatismi di stato, nel browser (`setStatus` in `net.js`):
   - "In corso" imposta l'inizio, se vuoto;
   - "Fatto" imposta fine e inizio, se vuoti, e `completedAt`.
+- Chiusura automatica dei padri, sul server (`cascadeParents` in `src/diario.ts`, previsione in `cascadeLocal` di `net.js`): tutti i sottotask fatti ⇒ padre "Fatto"; un sottotask riaperto ⇒ padre fatto torna "In corso".
 
 **Interfaccia**
 - `renderAll()` ridisegna tutte le viste ed è **sincrona**: alcune viste ci contano (vedi `pForce` in `prio.js`).

@@ -96,6 +96,29 @@ async function protocol() {
   r = await ask(a, 'task:patch', { id: 'testtask01', patch: { assigneeId: 'nessuno' } }); ok(!r.ok, 'assegnatario inesistente rifiutato');
   r = await ask(a, 'task:create', { title: '' }); ok(!r.ok, 'titolo vuoto rifiutato');
 
+  console.log('\nChiusura automatica del padre');
+  const getT = async id => { const p = wait(a, 'diario:init'); a.emit('diario:sync'); return (await p).tasks.find(t => t.id === id); };
+  r = await ask(a, 'task:create', { title: 'Padre' }); const P = r.task;
+  const k1 = (await ask(a, 'task:create', { title: 'Figlio 1', parentId: P.id })).task;
+  const k2 = (await ask(a, 'task:create', { title: 'Figlio 2', parentId: P.id })).task;
+  const n1 = (await ask(a, 'task:create', { title: 'Nipote', parentId: k2.id })).task;
+  await ask(a, 'task:patch', { id: k1.id, patch: { status: 'done' } });
+  ok((await getT(P.id)).status === 'todo', 'con un sottotask ancora aperto il padre resta aperto');
+  const ups = []; const onUp = d => ups.push(d); b.on('diario:upsert', onUp);
+  await ask(a, 'task:patch', { id: n1.id, patch: { status: 'done' } });
+  await sleep(150); b.off('diario:upsert', onUp);
+  let pp = await getT(P.id), kk = await getT(k2.id);
+  ok(kk.status === 'done' && pp.status === 'done', 'ultimo sottotask fatto: si chiudono padre e nonno');
+  ok(pp.completedAt && pp.endDate && pp.startDate && pp.updatedBy === 'alfa', 'il padre chiuso ha fine, inizio e data di completamento');
+  ok(ups.some(d => d.docs.some(t => t.id === P.id && t.status === 'done')), 'gli altri vedono la chiusura in tempo reale');
+  await ask(b, 'task:patch', { id: k1.id, patch: { status: 'doing' } });
+  pp = await getT(P.id);
+  ok(pp.status === 'doing' && pp.completedAt === null && (await getT(k2.id)).status === 'done', 'sottotask riaperto: il padre torna In corso, il fratello resta fatto');
+  await ask(a, 'task:patch', { id: P.id, patch: { status: 'done' } });
+  await ask(a, 'task:patch', { id: k1.id, patch: { notes: 'solo una nota' } });
+  ok((await getT(P.id)).status === 'done', 'una modifica che non cambia lo stato non riapre il padre');
+  await ask(a, 'task:delete', { id: P.id });
+
   console.log('\nNote del team');
   r = await ask(b, 'comment:add', { taskId: sub2.id, text: 'nota di beta' }); ok(r.ok, 'aggiunge una nota');
   await ask(a, 'comment:add', { taskId: sub.id, text: 'nota di alfa' });

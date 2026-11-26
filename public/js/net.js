@@ -49,11 +49,34 @@ async function flush(id) {
 /** Cambio stato con gli automatismi: In corso ⇒ inizio; Fatto ⇒ fine, inizio e data di completamento. */
 export function setStatus(id, s) {
   const t = db.tasks[id]; if (!t) return;
+  const prev = st(t.status);
   s = st(s); const p = { status: s };
   if (s === 'doing' && !isDate(t.startDate)) p.startDate = today();
-  if (s === 'done') { if (!isDate(t.endDate)) p.endDate = today(); if (!isDate(t.startDate)) p.startDate = today(); p.completedAt = new Date().toISOString(); }
+  if (s === 'done') Object.assign(p, doneFields(t));
   else p.completedAt = null;
   patch(id, p);
+  if (app.canWrite && s !== prev) cascadeLocal(id);
+}
+const doneFields = t => ({ endDate: isDate(t.endDate) ? t.endDate : today(), startDate: isDate(t.startDate) ? t.startDate : today(), completedAt: new Date().toISOString() });
+
+/**
+ * Previsione locale della chiusura automatica dei padri (la decide e la salva il server,
+ * `cascadeParents` in src/diario.ts): tutti i sottotask fatti ⇒ padre Fatto;
+ * un sottotask riaperto sotto un padre fatto ⇒ padre In corso. Non manda nulla al server.
+ */
+function cascadeLocal(id) {
+  let cur = db.tasks[id], changed = false;
+  for (let g = 0; g < 60 && cur && cur.parentId && cur.parentId !== cur.id; g++) {
+    const p = db.tasks[cur.parentId]; if (!p) break;
+    const kids = idx.cm[p.id] || [], allDone = kids.length > 0 && kids.every(x => st(x.status) === 'done'), pd = st(p.status) === 'done';
+    let q;
+    if (allDone && !pd) q = { status: 'done', ...doneFields(p) };
+    else if (!allDone && pd && st(cur.status) !== 'done') q = { status: 'doing', completedAt: null };
+    else break;
+    cur = db.tasks[p.id] = { ...p, ...q, updatedAt: new Date().toISOString(), updatedBy: app.profile };
+    rebuild(); changed = true;
+  }
+  if (changed) renderAll();
 }
 
 export async function create(title, parentId) {

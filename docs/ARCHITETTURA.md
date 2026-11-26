@@ -36,7 +36,9 @@ Come funziona MexMe dentro: il percorso di una richiesta, il tempo reale, i modu
                                                - c'è un profilo? (sennò no_profile)
                                                - patchTask(): valida ogni campo (FIELDS)
                                                - salva (tasks.json, scrittura ritardata)
-                                               - upsert('tasks',[t]) ──── diario:upsert ──▶ aggiorna db, ridisegna
+                                               - stato cambiato? cascadeParents():
+                                                 padri chiusi/riaperti
+                                               - upsert('tasks',[t,…padri]) ── diario:upsert ──▶ aggiorna db, ridisegna
    ◀──────────────────────── ack {ok:true} ──  (anche A riceve diario:upsert)
  "Salvato ✓"
 ```
@@ -131,7 +133,7 @@ Valori di `error`:
 | `clip:delete_file` | `id` | elimina il file (chiunque può farlo) |
 | `diario:sync` | — | rispedisce `diario:init` |
 | `task:create` | `{ id?, title, parentId? }` | crea un task o sottotask; ack `{ ok, task }`. Assegnato a chi lo crea |
-| `task:patch` | `{ id, patch }` | modifica i campi in `FIELDS` (vedi [DATI.md](DATI.md)) |
+| `task:patch` | `{ id, patch }` | modifica i campi in `FIELDS` (vedi [DATI.md](DATI.md)). Se cambia lo stato, chiude o riapre i padri (`cascadeParents`) e manda anche loro nello stesso `diario:upsert` |
 | `task:delete` | `{ id }` | elimina il task, i discendenti, le loro note e i loro allegati (file compresi) |
 | `comment:add` | `{ id?, taskId, text }` | aggiunge una nota (max 2000 caratteri) |
 | `comment:delete` | `{ id }` | elimina una nota, solo se è propria |

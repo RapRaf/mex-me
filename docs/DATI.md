@@ -50,6 +50,11 @@ Si creano dai nomi di `KNOWN_IPS` (vedi [CLAUDE.md](../CLAUDE.md) §5). Colore e
   - → "In corso" con inizio vuoto ⇒ inizio = oggi;
   - → "Fatto" ⇒ fine e inizio = oggi se vuoti, `completedAt` = adesso.
   - Lo calcola il browser (`setStatus` in `net.js`); il server controlla solo che ogni campo sia valido.
+- Chiusura automatica del padre (la fa il **server**, `cascadeParents` in `src/diario.ts`, dopo un `task:patch` che cambia lo stato):
+  - tutti i sottotask di un task "Fatto" ⇒ il task diventa "Fatto", con le stesse regole qui sopra; risale l'albero (il nonno può chiudersi a sua volta);
+  - un sottotask riaperto sotto un task "Fatto" ⇒ il task torna "In corso" e perde `completedAt`;
+  - il browser fa la stessa cosa in anticipo (`cascadeLocal` in `net.js`) solo per mostrarla subito: non manda nulla in più.
+  - Chiudere a mano un padre con sottotask aperti resta possibile (il dialog avvisa).
 - Eliminare un task elimina **tutti i discendenti**, le loro note, i loro allegati (con i file) e le relative note lette.
 - Un task nuovo è assegnato a chi lo crea.
 - I campi assenti nei task vecchi vanno gestiti nel codice (`?? valore predefinito`): non si fanno migrazioni.

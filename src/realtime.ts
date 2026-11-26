@@ -1,6 +1,6 @@
 import { users, tasks, comments, attachments, clipboard, isProfile } from './data';
 import {
-    createTask, patchTask, deleteTask, addComment, deleteComment, deleteAttachment,
+    createTask, patchTask, cascadeParents, deleteTask, addComment, deleteComment, deleteAttachment,
     setSeen, seenOf, UserError,
 } from './diario';
 import { upsert, remove, broadcastPresence, initSocketData, socketsOf, getIo, type AppSocket } from './hub';
@@ -90,8 +90,10 @@ export function onConnection(s: AppSocket) {
     });
 
     command(s, 'task:patch', (by, p) => {
+        const prev = typeof p?.id === 'string' ? tasks.get(p.id)?.status : undefined;
         const t = patchTask(p?.id, p?.patch, by);
-        upsert('tasks', [t]);
+        // Cambio di stato di un sottotask: il padre si chiude (o si riapre) da solo.
+        upsert('tasks', [t, ...(t.status !== prev ? cascadeParents(t, by) : [])]);
     });
 
     command(s, 'task:delete', (_by, p) => {
