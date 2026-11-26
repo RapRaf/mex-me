@@ -49,9 +49,6 @@ h1{font-size:clamp(30px,4.2vw,44px)}
 .av{flex:none;width:30px;height:30px;border-radius:50%;background:var(--c,#8a93a6);color:#fff;display:inline-grid;place-items:center;font:700 12px "Red Hat Display",sans-serif;vertical-align:middle}
 .asg{display:inline-flex;align-items:center;gap:8px;white-space:nowrap;font-size:15px}
 .asg.none{color:var(--mute)}
-.mine{min-height:40px;border-radius:99px;border:1px dashed var(--line);background:none;padding:0 14px;font-weight:600;color:var(--mute);display:inline-flex;align-items:center;gap:6px}
-.mine[aria-pressed=true]{border-style:solid;border-color:var(--c);color:var(--ink);background:color-mix(in srgb,var(--c) 14%,var(--panel))}
-.mine .av{width:22px;height:22px;font-size:10px}
 .us{min-height:38px;border-radius:9px;border:1px solid var(--line);background:var(--panel);padding:0 8px;font-size:14px;font-weight:600;flex:none;max-width:150px}
 
 /* ---------- appunti ---------- */
@@ -91,9 +88,22 @@ thead th{font-size:13px;font-weight:600;color:var(--mute);background:var(--field
 tbody tr{cursor:pointer;transition:background .15s}
 tbody tr:hover{background:var(--field)}
 tbody tr:last-child td{border-bottom:0}
-td.tc{box-shadow:inset 4px 0 0 var(--sc);width:44%;min-width:200px}
-.tt{font-weight:600;font-size:17px;display:block}
-.sub{display:block;font-size:14px;color:var(--mute);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:0;min-width:100%}
+td.tc{box-shadow:inset 4px 0 0 var(--sc);width:60%;min-width:260px}
+.tt{font-weight:600;font-size:17px;display:block;overflow-wrap:anywhere}
+/* note del task: fino a 4 righe, a capo come sono state scritte */
+.sub{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;line-clamp:4;font-size:14px;line-height:1.45;color:var(--mute);margin-top:4px;overflow:hidden;white-space:pre-line;overflow-wrap:anywhere;max-width:80ch}
+tr.sr .sub{-webkit-line-clamp:2;line-clamp:2;font-size:13px;margin-top:2px}
+/* date: una per riga */
+td.tdt{font-size:14px;line-height:1.5}
+.dl{display:block}.dl i{font-style:normal;color:var(--mute);display:inline-block;min-width:6.2em}
+.dl.none{color:var(--mute)}.dl.late i{font-weight:400}
+tr.sr td.tdt{font-size:13px}
+/* barra dei filtri della Home */
+.hfil{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}
+.hfil #hQ{flex:1 1 240px;width:auto}
+.fsel.on{border-color:var(--ink);font-weight:600}
+.hcount{font-size:14px;color:var(--mute);margin-left:auto;font-variant-numeric:tabular-nums}
+.chip.clate[aria-pressed=false] b{color:var(--acc)}
 .num{white-space:nowrap;font-variant-numeric:tabular-nums}
 .late{color:var(--acc);font-weight:600}
 .pill{min-height:36px;border-radius:99px;border:1.5px solid var(--sc);background:color-mix(in srgb,var(--sc) 12%,var(--panel));color:var(--sc);font-weight:700;font-size:14px;padding:0 10px}
@@ -107,7 +117,6 @@ tbody.g.alt tr{background:light-dark(#edf2fb,#13265a)}
 tbody.g tr:hover{background:light-dark(#e2eaf8,#1a2f68)}
 /* home: blocchi task staccati */
 .card.gl{background:none;border:0;border-radius:0;overflow:visible;overflow-x:auto}
-@media(max-width:1100px){#list thead th:last-child,td.tu{display:none}}
 .gl table{border-collapse:separate;border-spacing:0}
 .gl thead th{background:none;border-bottom:0;padding-top:0;padding-bottom:6px}
 .gl tbody.gp tr{cursor:default}
@@ -336,7 +345,9 @@ textarea.fi{padding:10px 12px;min-height:80px;resize:vertical;line-height:1.45}
   #list thead{display:none}#list tbody tr{display:grid;grid-template-columns:minmax(0,1fr) auto;padding:10px 14px;gap:4px 10px;border-bottom:1px solid var(--line);box-shadow:inset 4px 0 0 var(--sc)}
   #list tbody td{border:0;padding:0}#list td.tc{grid-column:1;grid-row:1/span 2;box-shadow:none;width:auto;min-width:0}#list td.ts{grid-column:2;grid-row:1}#list td.tm{grid-column:2;grid-row:2;justify-self:end;width:auto}
   .dlg.cdlg{height:100vh;height:100dvh}
-  #list td.tp,#list td.td{grid-column:1/-1;font-size:14px}#list td.td::before{content:attr(data-l)" ";color:var(--mute)}#list td.tu{display:none}
+  #list td.tp{grid-column:1/-1;font-size:14px}
+  #list td.tdt{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:0 14px;font-size:13px}#list .dl i{min-width:0;margin-right:4px}
+  .hfil .fsel{flex:1 1 140px}.hcount{flex-basis:100%;margin-left:0}
   .gl tbody.g tr{background:var(--panel);border-left:1px solid var(--line);border-right:1px solid var(--line)}
   .gl tbody.g.alt tr{background:light-dark(#edf2fb,#13265a)}
   .gl tbody.g td{background:none!important;border:0!important;border-radius:0!important}

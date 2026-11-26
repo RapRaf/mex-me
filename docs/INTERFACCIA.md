@@ -64,23 +64,31 @@ Chi arriva da un IP senza profilo (possibile solo con `KNOWN_IPS` vuota) vede so
   - con "＋ Nuovo task" si crea un task principale;
   - con un task scelto si crea un sottotask (la scelta resta, per inserirne diversi di fila);
   - scorciatoia `n`.
-- **Filtri:** Aperti (predefinito) / In corso / Da fare / Fatti, con i conteggi; "Solo i miei" (task assegnati a me o con un mio sottotask) viene ricordato.
+- **Filtri per stato** (bottoni con i conteggi): Aperti (predefinito) / In corso / Da fare / In ritardo / Fatti / Tutti.
+  - "In ritardo" = task aperto con una fine passata, sua o di un sottotask aperto.
+  - I conteggi tengono conto degli altri filtri.
+- **Altri filtri** (riga sotto):
+  - Cerca: titolo e note del task e dei suoi sottotask;
+  - Persona: tutte / "I miei" / un collega / non assegnati. Un task compare se è assegnato alla persona o se lo è uno dei suoi sottotask;
+  - Priorità e Label (le stesse della vista Priorità);
+  - Ordina: per stato (predefinito), aggiornati di recente, aperti da più tempo, aperti da meno tempo, scadenza più vicina (senza scadenza in fondo), priorità, titolo A–Z;
+  - "Azzera filtri" compare quando un filtro non è quello predefinito; a destra "N di M task".
+  - Persona, priorità, label e ordine si ricordano (`mx-home`); stato e ricerca no. Il vecchio "Solo i miei" diventa "I miei".
 - **Tabella:**
   - un blocco staccato e arrotondato per ogni task principale, a colori alternati;
   - sotto, i sottotask rientrati con ↳;
   - nelle viste aperte i sottotask fatti sono riassunti in "✓ N sottotask fatti nascosti".
 - **Colonne:**
-  - Task, con prima riga delle note, graffetta se ci sono allegati e ▾/▸ per comprimere;
+  - Task: titolo (va a capo) e note del task, fino a 4 righe come sono state scritte (2 per i sottotask); graffetta se ci sono allegati e ▾/▸ per comprimere;
   - Note: fumetto con il numero; magenta se ci sono note nuove di altri;
   - Stato: menu modificabile dalla riga;
   - Assegnato;
   - Sottotask: barra fatti/totale;
-  - Inizio, Fine ("in ritardo" in magenta);
-  - Aggiornato.
+  - Date, una per riga: Inizio, Fine ("in ritardo" in magenta), Aperto (da quanto esiste) e Aggiornato, oppure Chiuso per i task fatti. Per i sottotask solo Inizio e Fine.
 - **Click su una riga** → dialog del task principale; se la riga è un sottotask, il dialog scorre fino a lui e lo evidenzia.
 - **Larghezze:**
-  - sotto 1100px sparisce "Aggiornato" e la tabella scorre dentro il riquadro (mai la pagina);
-  - sotto 600px ogni riga diventa una scheda.
+  - se lo spazio non basta la tabella scorre dentro il riquadro (mai la pagina);
+  - sotto 600px ogni riga diventa una scheda, con le date in fila e i filtri su due colonne.
 
 ## Dialog del task
 

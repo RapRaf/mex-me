@@ -56,8 +56,17 @@
 
 <main class="wrap" id="home" hidden>
   <div class="bar">
-    <div class="chips"><div class="chips" id="chips" role="group" aria-label="Filtra per stato"></div><button class="mine" id="mineB" aria-pressed="false"></button></div>
+    <div class="chips" id="chips" role="group" aria-label="Filtra per stato"></div>
     <span class="save" id="save" aria-live="polite"></span>
+  </div>
+  <div class="hfil" role="group" aria-label="Altri filtri">
+    <input class="fsel" id="hQ" type="search" placeholder="Cerca nei task e nelle note…" aria-label="Cerca nei task">
+    <select class="fsel" id="hU" aria-label="Persona"></select>
+    <select class="fsel" id="hP" aria-label="Priorità"></select>
+    <select class="fsel" id="hL" aria-label="Label"></select>
+    <select class="fsel" id="hO" aria-label="Ordina"></select>
+    <button class="btn" id="hR" type="button" hidden>Azzera filtri</button>
+    <span class="hcount" id="hN" aria-live="polite"></span>
   </div>
   <div class="card" id="list"></div>
 </main>

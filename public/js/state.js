@@ -44,7 +44,6 @@ export const ulist = () => Object.values(db.users).filter(u => u.active !== fals
 export const uname = id => db.users[id] ? db.users[id].name : '';
 export const asg = id => { const u = db.users[id]; return u ? `<span class="asg">${av(u)}${esc(u.name)}</span>` : '<span class="asg none">Non assegnato</span>'; };
 export const uopts = sel => '<option value="">Non assegnato</option>' + ulist().map(u => `<option value="${esc(u.id)}"${u.id === sel ? ' selected' : ''}>${esc(u.name)}</option>`).join('');
-export const mineTree = t => t.assigneeId === app.profile || desc(t.id).some(x => x.assigneeId === app.profile);
 export const isLate = t => st(t.status) !== 'done' && isDate(t.endDate) && t.endDate < today();
 
 /* ---------- allegati e note: icone con contatore ---------- */

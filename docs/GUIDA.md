@@ -66,7 +66,7 @@ npm run persone
   http://127.0.0.1:3003  →  te stesso (Sviluppo)
 ```
 
-Apri gli indirizzi in finestre diverse: ognuna è una persona diversa, con il suo colore, i suoi task ("Solo i miei"), le sue note lette.
+Apri gli indirizzi in finestre diverse: ognuna è una persona diversa, con il suo colore, i suoi task (filtro persona "I miei"), le sue note lette.
 Così si prova tutto il tempo reale:
 - un task creato da Anna compare subito da Bruno;
 - la nota di Bruno fa comparire il badge magenta ad Anna;
@@ -212,7 +212,8 @@ Il risultato arriva a tutte le pagine con `diario:upsert`, che aggiorna i dati e
   - [ ] si crea un task dal campo in alto;
   - [ ] si crea un sottotask scegliendo il padre dal menu;
   - [ ] si cambia stato dalla riga;
-  - [ ] i filtri e "Solo i miei" funzionano;
+  - [ ] i filtri (stato, cerca, persona, priorità, label, ordine) e "Azzera filtri" funzionano;
+  - [ ] mettendo "Fatto" sull'ultimo sottotask aperto il padre diventa "Fatto" da solo (anche per gli altri); riaprendo un sottotask torna "In corso";
   - [ ] ▾/▸ comprime ed espande.
 - [ ] Dialog del task:
   - [ ] titolo, stato, assegnato, date e note si salvano;

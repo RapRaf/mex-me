@@ -4,6 +4,9 @@ Le modifiche, dalla più recente. Chi consegna una funzione aggiunge una riga so
 
 ## Non ancora pubblicato
 
+- Chiusura automatica: quando tutti i sottotask sono "Fatto" anche il task padre diventa "Fatto" (e risale l'albero); se un sottotask si riapre il padre torna "In corso". La decide il server.
+- Home: nuovi filtri (cerca, persona anche per i colleghi, priorità, label, "In ritardo", "Tutti"), ordinamento (aperti da più/meno tempo, scadenza, priorità, titolo…) e "Azzera filtri". "Solo i miei" diventa la persona "I miei".
+- Home: più spazio a titolo e note (fino a 4 righe), date una per riga in una sola colonna, con da quanto è aperto il task.
 - Documentazione per chi lavora al progetto (`CLAUDE.md`, `docs/`) e test automatici (`npm test`).
 - Ambiente locale completo senza Redis: `npm run seed` (dati d'esempio) e `npm run persone` (più persone di prova sulla stessa macchina).
 
